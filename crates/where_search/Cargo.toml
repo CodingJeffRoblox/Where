@@ -1,0 +1,11 @@
+[package]
+name = "where_search"
+description = "Universal local search for Where: keyword + filters + relationship context."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+where_core.workspace = true
+where_storage.workspace = true
+serde.workspace = true

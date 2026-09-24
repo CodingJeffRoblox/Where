@@ -1,0 +1,24 @@
+[package]
+name = "where_cli"
+description = "Command-line prototype for Where (spec §38)."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+# Not named `where`: that collides with the built-in where.exe on Windows.
+[[bin]]
+name = "where-cli"
+path = "src/main.rs"
+
+[dependencies]
+where_core.workspace = true
+where_storage.workspace = true
+where_search.workspace = true
+where_indexer.workspace = true
+anyhow.workspace = true
+clap.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

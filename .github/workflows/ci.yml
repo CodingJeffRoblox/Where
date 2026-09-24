@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  rust:
+    name: Rust (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Windows first: it's the alpha platform (spec §37).
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo fmt --all --check
+      - run: cargo clippy --all-targets --locked -- -D warnings
+      - run: cargo test --all --locked
+      - name: Smoke test CLI
+        run: cargo run -q -p where_cli -- --db ci.db demo
+
+  flutter:
+    name: Flutter analyze
+    runs-on: ubuntu-latest
+    # Non-blocking until the first green run; see docs/adr/0003.
+    continue-on-error: true
+    defaults:
+      run:
+        working-directory: apps/where_flutter
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter create --platforms=linux,windows,macos --project-name where_flutter .
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos

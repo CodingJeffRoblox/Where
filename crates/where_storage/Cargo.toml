@@ -1,0 +1,17 @@
+[package]
+name = "where_storage"
+description = "Local-first SQLite storage (with FTS5) for Where objects and relations."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+where_core.workspace = true
+rusqlite.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+chrono.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

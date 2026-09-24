@@ -1,0 +1,10 @@
+/target
+*.db
+*.db-wal
+*.db-shm
+.DS_Store
+# Flutter
+apps/where_flutter/.dart_tool/
+apps/where_flutter/build/
+apps/where_flutter/.flutter-plugins*
+apps/where_flutter/pubspec.lock

@@ -1,0 +1,40 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/where_core",
+    "crates/where_storage",
+    "crates/where_search",
+    "crates/where_indexer",
+    "crates/where_ffi",
+    "crates/where_cli",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "UNLICENSED"
+repository = "https://github.com/GhostTrace-LLC/where"
+rust-version = "1.80"
+
+[workspace.dependencies]
+where_core = { path = "crates/where_core" }
+where_storage = { path = "crates/where_storage" }
+where_search = { path = "crates/where_search" }
+where_indexer = { path = "crates/where_indexer" }
+
+anyhow = "1"
+thiserror = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+chrono = { version = "0.4", default-features = false, features = ["clock", "serde", "std"] }
+uuid = { version = "1", features = ["v7"] }
+rusqlite = { version = "0.32", features = ["bundled"] }
+walkdir = "2"
+blake3 = "1"
+mime_guess = "2"
+clap = { version = "4", features = ["derive", "env"] }
+tempfile = "3"
+
+[profile.release]
+lto = "thin"
+strip = true
