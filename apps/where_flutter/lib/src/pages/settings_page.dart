@@ -168,7 +168,7 @@ class SettingsPage extends StatelessWidget {
               FadeSlideIn(
                 index: 5,
                 child: Center(
-                  child: Text('Where 0.2.0 · alpha · local-first',
+                  child: Text('Where 0.3.0 · alpha · local-first',
                       style: t.labelMedium?.copyWith(color: scheme.onSurfaceVariant)),
                 ),
               ),
@@ -263,9 +263,13 @@ class _Shortcut extends StatelessWidget {
 class _BrowserCard extends StatelessWidget {
   const _BrowserCard();
 
+  /// The setup scripts copy the extension next to the app:
+  /// beside Where.exe / the Linux binary, or in Where.app/Contents/Resources.
   static String _extensionFolder() {
+    final sep = Platform.pathSeparator;
     final exeDir = File(Platform.resolvedExecutable).parent.path;
-    return '$exeDir${Platform.pathSeparator}browser-extension';
+    final base = Platform.isMacOS ? '$exeDir$sep..${sep}Resources' : exeDir;
+    return Directory('$base${sep}browser-extension').absolute.path;
   }
 
   @override

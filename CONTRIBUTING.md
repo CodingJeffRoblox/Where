@@ -12,9 +12,12 @@ Thanks for helping. Where is small and early, so the process is light.
 
 ## Set up
 
-Windows: double-click `start-where.bat` — it installs the tools and builds
-everything. Other platforms: install Rust and Flutter, then see
-[`apps/where_flutter/README.md`](apps/where_flutter/README.md).
+Run the setup script for your computer — `start-where.bat` (Windows),
+`start-where.command` (Mac) or `bash start-where.sh` (Linux). It installs
+the tools and builds everything. Details in the [README](README.md#build-it-yourself).
+
+If you add or edit a script on Windows, keep it executable for Mac and Linux:
+`git update-index --chmod=+x <file>`.
 
 ## Make a change
 

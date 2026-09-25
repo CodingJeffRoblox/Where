@@ -3,7 +3,7 @@
 The Where desktop app (Flutter). Talks to the Rust core through `dart:ffi`
 (`crates/where_ffi`), passing JSON strings across the boundary.
 
-> Status: pre-alpha. Not yet compiled in CI — see the Notion roadmap.
+> Status: alpha. Builds for Windows, macOS and Linux.
 
 ## Features
 
@@ -20,8 +20,10 @@ The Where desktop app (Flutter). Talks to the Rust core through `dart:ffi`
 
 ## Run it
 
-**Windows:** double-click `start-where.bat` in the repo root — it installs
-everything, builds, bundles `where_ffi.dll` next to the app and launches it.
+Use the setup script in the repo root — `start-where.bat` (Windows),
+`start-where.command` (Mac) or `bash start-where.sh` (Linux). It installs
+everything, builds, bundles the engine into the app and opens it. Mac and
+Linux packaging lives in [`scripts/package.sh`](../../scripts/package.sh).
 
 ### Manually (Windows / macOS / Linux)
 

@@ -13,6 +13,38 @@ Planned next — see the Notion roadmap:
 - Global shortcut (Ctrl+Space) to open Where from anywhere
 - Linking notes to files and people
 
+## [0.3.0] — 2026-09-25 · Windows, Mac and Linux
+
+### Added
+- **Mac and Linux apps.** Where now builds as `Where.app` on macOS (Apple
+  Silicon and Intel) and as `Where` on Linux (x64 and ARM), alongside
+  `Where.exe` on Windows.
+- **`start-where.sh`** (Mac and Linux) and **`start-where.command`**
+  (double-click on a Mac): detects the operating system, processor and Linux
+  distribution, installs what's missing (Xcode check and CocoaPods on Mac;
+  build tools via apt, dnf, pacman or zypper on Linux; Rust; Flutter), builds
+  the right app, adds it to Applications or the applications menu, and
+  opens it.
+- **Automatic release builds:** pushing a `v*` tag builds Windows x64, macOS
+  universal (.dmg and .zip), Linux x64 and arm64 (.tar.gz) and the browser
+  extension on GitHub, and publishes them as a Release with notes from this
+  changelog.
+- Linux `install.sh` adds Where to the applications menu (`--remove` undoes it).
+- High-resolution app icon in `assets/icon/` used for Mac and Linux.
+
+### Changed
+- The app finds its engine inside each platform's package (next to
+  `Where.exe`, in `Contents/Frameworks` on Mac, in `lib/` on Linux).
+- On Mac, Where runs outside the App Store sandbox so it can re-index your
+  chosen folders after a restart and accept the local browser connection.
+- Scripts keep Unix line endings (`.gitattributes`) so they work after being
+  committed from Windows.
+
+### Known limitations
+- Downloads aren't code-signed yet: Windows SmartScreen and macOS Gatekeeper
+  will ask for confirmation the first time.
+- Phones (Android, iOS) are not supported yet.
+
 ## [0.2.0] — 2026-09-25 · Save links from your browser
 
 ### Added
@@ -94,8 +126,9 @@ that connects your projects, tasks, notes and files.
 ### Known limitations
 - File *contents* are not searched yet — only names, paths and types.
 - No sync, accounts, AI or activity tracking (all by design for now).
-- Windows only for the desktop app; macOS and Linux come later.
+- Windows only for the desktop app; macOS and Linux come later (added in 0.3.0).
 
-[Unreleased]: https://github.com/CodingJeffRoblox/Where/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/CodingJeffRoblox/Where/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/CodingJeffRoblox/Where/releases/tag/v0.3.0
 [0.2.0]: https://github.com/CodingJeffRoblox/Where/releases/tag/v0.2.0
 [0.1.0]: https://github.com/CodingJeffRoblox/Where/releases/tag/v0.1.0

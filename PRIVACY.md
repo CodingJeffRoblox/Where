@@ -4,10 +4,16 @@ Where is built to keep your information on your computer.
 
 ## What Where stores
 
-Everything lives in one database file on your computer:
-`%APPDATA%\CrownCore Studios\Where\where.db` on Windows, plus a small
-`settings.json` next to it. (Settings → Privacy in Where shows the exact
-path.)
+Everything lives in one database file on your computer, plus a small
+`settings.json` next to it:
+
+| Computer | Folder |
+|---|---|
+| Windows | `%APPDATA%\CrownCore Studios\Where\` |
+| Mac | `~/Library/Application Support/com.crowncorestudios.where/` |
+| Linux | `~/.local/share/com.crowncorestudios.where/` |
+
+Settings → Privacy in Where shows the exact path.
 
 It contains:
 

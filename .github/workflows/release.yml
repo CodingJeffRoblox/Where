@@ -1,0 +1,167 @@
+name: Release
+
+# Builds Where for every desktop and attaches the downloads to a GitHub
+# Release. Each program is built on its own kind of computer, because a
+# Windows .exe, a Mac .app and a Linux program can only be made there.
+#
+#   Push a tag like v0.3.0  -> builds everything and publishes a Release
+#   Actions > Release > Run -> builds everything as downloadable artifacts
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  windows:
+    name: Windows (x64)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Build engine
+        run: cargo build --release -p where_ffi -p where_cli
+      - name: Build app
+        working-directory: apps/where_flutter
+        run: |
+          flutter pub get
+          flutter build windows --release
+      - name: Package
+        shell: pwsh
+        run: |
+          $version = (Select-String -Path Cargo.toml -Pattern '^version = "(.*)"').Matches[0].Groups[1].Value
+          $out = "apps/where_flutter/build/windows/x64/runner/Release"
+          Copy-Item target/release/where_ffi.dll $out/
+          Copy-Item target/release/where-cli.exe $out/
+          Copy-Item -Recurse browser-extension "$out/browser-extension"
+          New-Item -ItemType Directory -Force dist | Out-Null
+          $stage = "stage/Where"
+          New-Item -ItemType Directory -Force $stage | Out-Null
+          Copy-Item -Recurse "$out/*" $stage/
+          Compress-Archive -Path $stage -DestinationPath "dist/Where-$version-windows-x64.zip" -Force
+      - uses: actions/upload-artifact@v4
+        with:
+          name: where-windows-x64
+          path: dist/*
+
+  macos:
+    name: macOS (Apple Silicon + Intel)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - uses: Swatinem/rust-cache@v2
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Build and package
+        run: bash scripts/package.sh --universal --archive
+      - uses: actions/upload-artifact@v4
+        with:
+          name: where-macos-universal
+          path: dist/*
+
+  linux:
+    name: Linux (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: ubuntu-22.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.arch }}
+      - name: Install Flutter
+        # A git clone works on both x64 and arm64 Linux.
+        run: |
+          git clone --depth 1 -b stable https://github.com/flutter/flutter.git "$HOME/flutter"
+          echo "$HOME/flutter/bin" >> "$GITHUB_PATH"
+      - name: Build and package
+        run: |
+          flutter config --no-analytics --enable-linux-desktop
+          bash scripts/package.sh --archive
+      - uses: actions/upload-artifact@v4
+        with:
+          name: where-linux-${{ matrix.arch }}
+          path: dist/*
+
+  extension:
+    name: Browser extension
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Zip extension
+        run: |
+          version="$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)"
+          mkdir -p dist
+          (cd browser-extension && zip -r "../dist/Where-$version-browser-extension.zip" .)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: where-browser-extension
+          path: dist/*
+
+  release:
+    name: Publish release
+    if: startsWith(github.ref, 'refs/tags/v') && !cancelled()
+    needs: [windows, macos, linux, extension]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Release notes from CHANGELOG
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v v="$version" '
+            $0 ~ "^## \\[" v "\\]" {on=1; next}
+            on && /^## \[/ {exit}
+            on {print}
+          ' CHANGELOG.md > notes.md
+          cat >> notes.md <<'EOF'
+
+          ## Downloads
+
+          | Your computer | Download |
+          |---|---|
+          | Windows 10/11 | `Where-…-windows-x64.zip` — unzip, run `Where.exe` |
+          | Mac (Apple Silicon or Intel) | `Where-…-macos-universal.dmg` — drag Where to Applications |
+          | Linux (Intel/AMD) | `Where-…-linux-x64.tar.gz` — unpack, run `./install.sh` |
+          | Linux (ARM) | `Where-…-linux-arm64.tar.gz` |
+          | Chrome / Edge / Brave | `Where-…-browser-extension.zip` — see Settings → Browser |
+
+          **First launch:** these builds aren't signed yet. On Windows click
+          *More info → Run anyway*. On a Mac, right-click Where → *Open* the first time.
+          EOF
+      - uses: softprops/action-gh-release@v2
+        with:
+          body_path: notes.md
+          files: dist/*
+          fail_on_unmatched_files: false

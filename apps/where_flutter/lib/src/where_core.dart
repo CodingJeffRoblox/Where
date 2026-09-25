@@ -55,7 +55,7 @@ class WhereCore {
   /// Opens the database at [dbPath]. [libraryPath] overrides where the
   /// native library is loaded from (useful in development).
   static WhereCore open(String dbPath, {String? libraryPath}) {
-    final lib = DynamicLibrary.open(libraryPath ?? defaultLibraryName());
+    final lib = DynamicLibrary.open(libraryPath ?? defaultLibraryPath());
     final open = lib.lookupFunction<_OpenC, _OpenC>('where_open');
     final p = dbPath.toNativeUtf8();
     try {
@@ -73,6 +73,26 @@ class WhereCore {
     if (Platform.isWindows) return 'where_ffi.dll';
     if (Platform.isMacOS) return 'libwhere_ffi.dylib';
     return 'libwhere_ffi.so';
+  }
+
+  /// Where the engine ships inside each platform's app package:
+  /// - Windows: next to Where.exe
+  /// - Linux:   bundle/lib/ (next to the Flutter libraries)
+  /// - macOS:   Where.app/Contents/Frameworks/
+  /// Falls back to the bare name so the system search path is tried.
+  static String defaultLibraryPath() {
+    final name = defaultLibraryName();
+    final exeDir = File(Platform.resolvedExecutable).parent.path;
+    final sep = Platform.pathSeparator;
+    final candidates = <String>[
+      if (Platform.isMacOS) '$exeDir$sep..${sep}Frameworks$sep$name',
+      if (Platform.isLinux) '$exeDir${sep}lib$sep$name',
+      '$exeDir$sep$name',
+    ];
+    for (final c in candidates) {
+      if (File(c).existsSync()) return c;
+    }
+    return name;
   }
 
   dynamic _decode(Pointer<Utf8> result) {

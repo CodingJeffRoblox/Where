@@ -81,8 +81,9 @@ class _StartupError extends StatelessWidget {
               Text('Where could not start', style: t.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
               const SizedBox(height: 10),
               Text(
-                'The search engine (where_ffi) could not be loaded. Running start-where.bat again '
-                'usually fixes this — it rebuilds the engine and puts it next to the app.',
+                'The search engine (where_ffi) could not be loaded. Running the setup script again '
+                'usually fixes this — start-where.bat on Windows, start-where.sh on Mac or Linux. '
+                'It rebuilds the engine and puts it inside the app.',
                 style: t.bodyMedium,
               ),
               const SizedBox(height: 16),

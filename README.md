@@ -9,9 +9,9 @@
 Your files, notes, tasks and projects, connected and searchable in one place.
 Local-first. Private by default. No account needed.
 
-[![Version](https://img.shields.io/badge/version-0.2.0_alpha-4F5BD5)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.3.0_alpha-4F5BD5)](CHANGELOG.md)
 [![CI](https://github.com/CodingJeffRoblox/Where/actions/workflows/ci.yml/badge.svg)](https://github.com/CodingJeffRoblox/Where/actions/workflows/ci.yml)
-![Platform](https://img.shields.io/badge/platform-Windows-0078D6)
+![Platform](https://img.shields.io/badge/platform-Windows_%7C_macOS_%7C_Linux-0078D6)
 ![Rust](https://img.shields.io/badge/core-Rust-B7410E)
 ![Flutter](https://img.shields.io/badge/app-Flutter-02569B)
 ![Local-first](https://img.shields.io/badge/data-stays_on_your_device-2E7D32)
@@ -60,30 +60,64 @@ with **your real files**, fully offline. See
 - **Export everything** to JSON, Markdown, CSV or a database copy.
 - Light and dark themes, full keyboard control, subtle animations.
 
-## Quick start (Windows)
+## Download
 
-1. Download or clone this repo.
-2. Double-click **`start-where.bat`**.
+Get the file for your computer from the
+[latest release](https://github.com/CodingJeffRoblox/Where/releases/latest):
 
-That's it. The script:
+| Your computer | Download | Then |
+|---|---|---|
+| **Windows** 10 / 11 | `Where-…-windows-x64.zip` | Unzip, run `Where.exe` |
+| **Mac** (Apple Silicon or Intel) | `Where-…-macos-universal.dmg` | Drag Where to Applications |
+| **Linux** (Intel / AMD) | `Where-…-linux-x64.tar.gz` | Unpack, run `./install.sh`, open Where from your menu |
+| **Linux** (ARM) | `Where-…-linux-arm64.tar.gz` | Same as above |
 
-- installs anything missing (Git, Visual Studio C++ Build Tools, Rust,
-  Flutter; Windows may ask you to approve installers),
-- reminds you to turn on **Developer Mode** if it's off,
-- builds the search engine and the app, opens **Where**, and adds it to your
-  desktop and Start menu.
+These builds aren't signed yet. The first time: on Windows click
+**More info → Run anyway**; on a Mac right-click Where → **Open**.
+
+## Build it yourself
+
+The setup script works out which computer it's on — Windows, Mac or Linux,
+Intel/AMD or ARM — installs anything missing, builds the right app for it,
+and opens Where.
+
+| Your computer | Run | You get |
+|---|---|---|
+| **Windows** | double-click **`start-where.bat`** | `Where.exe`, plus Desktop and Start menu shortcuts |
+| **Mac** | double-click **`start-where.command`** | `Where.app` in `~/Applications` (Launchpad, Spotlight) |
+| **Linux** | `bash start-where.sh` in a terminal | `Where`, added to your applications menu |
+
+What gets installed if it's missing:
+
+- **Windows:** Git, Visual Studio C++ Build Tools, Rust, Flutter. Turn on
+  **Developer Mode** when asked.
+- **Mac:** Xcode from the App Store (the script opens it for you — install
+  and open it once), CocoaPods, Rust, Flutter.
+- **Linux:** clang, cmake, ninja, pkg-config and GTK 3 via `apt`, `dnf`,
+  `pacman` or `zypper` (you'll be asked for your password), Rust, Flutter.
 
 The first run downloads several GB of tools and can take 20–40 minutes.
 Later runs take about a minute.
 
-| Command | What it does |
+| Option | What it does |
 |---|---|
-| `start-where.bat` | Set up if needed, build, open Where |
-| `start-where.bat update` | Get the latest code from GitHub first |
-| `start-where.bat cli` | Open the command-line version |
+| *(none)* | Set up if needed, build, open Where |
+| `update` | Get the latest code from GitHub first |
+| `cli` | Build and open the command-line version |
 
-If something goes wrong, the script shows the last lines of its log. The full
-log is at `%LOCALAPPDATA%\where-tools\setup-log.txt`.
+e.g. `start-where.bat update` or `bash start-where.sh update`.
+
+If something goes wrong, the script shows the last lines of its log:
+`%LOCALAPPDATA%\where-tools\setup-log.txt` on Windows,
+`~/.where-tools/setup-log.txt` on Mac and Linux.
+
+### Publishing a release
+
+Push a version tag (`git tag -a v0.3.0 -m "…" && git push origin v0.3.0`).
+GitHub then builds the Windows, Mac and Linux downloads on its own machines
+and attaches them to a Release, with notes taken from
+[CHANGELOG.md](CHANGELOG.md). See
+[`.github/workflows/release.yml`](.github/workflows/release.yml).
 
 ## Save links from your browser
 
@@ -142,11 +176,12 @@ apps/where_flutter ──dart:ffi──► where_ffi ──► where_search ─�
 | `crates/where_ffi/` | The bridge between the app and the engine |
 | `crates/where_cli/` | Command-line tool |
 | `browser-extension/` | Save pages from Chrome, Edge or Brave |
+| `scripts/` | Packaging for Mac and Linux (used by `start-where.sh` and releases) |
 | `docs/` | [Product spec](docs/SPEC.md) and [architecture decisions](docs/adr/) |
 
 ## Status
 
-**v0.2.0 — alpha.** See the [changelog](CHANGELOG.md).
+**v0.3.0 — alpha.** Windows, Mac and Linux. See the [changelog](CHANGELOG.md).
 
 | Spec §38 question | Status |
 |---|---|
