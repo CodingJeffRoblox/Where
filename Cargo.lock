@@ -721,7 +721,7 @@ dependencies = [
 
 [[package]]
 name = "where_cli"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -736,7 +736,7 @@ dependencies = [
 
 [[package]]
 name = "where_core"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "chrono",
  "serde",
@@ -747,7 +747,7 @@ dependencies = [
 
 [[package]]
 name = "where_ffi"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -759,7 +759,7 @@ dependencies = [
 
 [[package]]
 name = "where_indexer"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "blake3",
  "chrono",
@@ -775,7 +775,7 @@ dependencies = [
 
 [[package]]
 name = "where_search"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "serde",
  "where_core",
@@ -784,7 +784,7 @@ dependencies = [
 
 [[package]]
 name = "where_storage"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "chrono",
  "rusqlite",

@@ -1,33 +1,120 @@
-import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 
+import 'src/boot_screen.dart';
 import 'src/shell.dart';
 import 'src/state.dart';
 import 'src/theme.dart';
 import 'src/where_core.dart';
 
-Future<void> main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  WhereState? state;
-  String? error;
-  try {
-    final dir = await getApplicationSupportDirectory();
-    await dir.create(recursive: true);
-    final sep = Platform.pathSeparator;
-    final core = WhereCore.open(
-      '${dir.path}${sep}where.db',
-      libraryPath: Platform.environment['WHERE_FFI_LIB'],
-    );
-    state = WhereState(core, File('${dir.path}${sep}settings.json'));
-    // Lets the Where browser extension save links (127.0.0.1 only).
-    unawaited(state.bridge.start());
-  } catch (e) {
-    error = '$e';
+  // Show the loading screen straight away; start Where behind it.
+  runApp(const WhereRoot());
+}
+
+/// Runs startup behind an animated loading screen, then fades into the app.
+class WhereRoot extends StatefulWidget {
+  const WhereRoot({super.key});
+
+  @override
+  State<WhereRoot> createState() => _WhereRootState();
+}
+
+class _WhereRootState extends State<WhereRoot> {
+  /// Keep the loading screen up at least this long so it never just flickers.
+  static const _minimumBoot = Duration(milliseconds: 1100);
+
+  WhereState? _ready;
+  WhereState? _shown;
+  String? _error;
+  String _step = 'Starting…';
+  double _progress = 0.05;
+  ThemeMode _theme = ThemeMode.system;
+
+  @override
+  void initState() {
+    super.initState();
+    _boot();
   }
-  runApp(state == null ? WhereApp(startupError: error) : WhereScope(state: state, child: const WhereApp()));
+
+  void _set(String step, double progress) {
+    if (mounted) setState(() {
+      _step = step;
+      _progress = progress;
+    });
+  }
+
+  // Lets the loading screen paint between steps.
+  Future<void> _breathe() => Future<void>.delayed(const Duration(milliseconds: 120));
+
+  Future<void> _boot() async {
+    final clock = Stopwatch()..start();
+    try {
+      _set('Finding your library…', 0.2);
+      final dir = await getApplicationSupportDirectory();
+      await dir.create(recursive: true);
+      final sep = Platform.pathSeparator;
+      final settings = File('${dir.path}${sep}settings.json');
+      _theme = _savedTheme(settings);
+      await _breathe();
+
+      _set('Starting the search engine…', 0.45);
+      await _breathe();
+      final core = WhereCore.open(
+        '${dir.path}${sep}where.db',
+        libraryPath: Platform.environment['WHERE_FFI_LIB'],
+      );
+
+      _set('Loading your projects and notes…', 0.7);
+      await _breathe();
+      final state = WhereState(core, settings);
+
+      _set('Connecting your browser…', 0.88);
+      // Lets the Where browser extension save links (127.0.0.1 only).
+      await state.bridge.start();
+
+      _set('Ready', 1);
+      final left = _minimumBoot - clock.elapsed;
+      if (left > Duration.zero) await Future<void>.delayed(left);
+      if (mounted) setState(() => _ready = state);
+    } catch (e) {
+      if (mounted) setState(() => _error = '$e');
+    }
+  }
+
+  /// Reads the saved theme early so the loading screen matches the app.
+  static ThemeMode _savedTheme(File settings) {
+    try {
+      final j = jsonDecode(settings.readAsStringSync()) as Map<String, dynamic>;
+      return ThemeMode.values.firstWhere((m) => m.name == j['theme'], orElse: () => ThemeMode.system);
+    } catch (_) {
+      return ThemeMode.system;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final shown = _shown;
+    if (shown != null) return WhereScope(state: shown, child: const WhereApp());
+    if (_error != null) return WhereApp(startupError: _error);
+    return MaterialApp(
+      title: 'Where',
+      debugShowCheckedModeBanner: false,
+      theme: WhereTheme.light(),
+      darkTheme: WhereTheme.dark(),
+      themeMode: _theme,
+      home: BootScreen(
+        step: _step,
+        progress: _progress,
+        leaving: _ready != null,
+        onLeft: () => setState(() => _shown = _ready),
+      ),
+    );
+  }
 }
 
 class WhereApp extends StatelessWidget {

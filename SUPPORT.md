@@ -23,6 +23,8 @@
 | Mac: "Xcode is needed" | Install Xcode from the App Store, open it once, run the script again. |
 | Mac: `start-where.command` won't run | In Terminal: `chmod +x start-where.command start-where.sh` |
 | Linux: `Permission denied` | Run `bash start-where.sh` (or `chmod +x start-where.sh`). |
+| Windows: "VCRUNTIME140.dll was not found" | Use the installer or the latest portable zip — both include it. |
+| Linux AppImage won't start | `chmod +x Where-*.AppImage`. On Ubuntu 22.04+ you may need `sudo apt install libfuse2`. |
 | Linux: missing `libgtk-3` | Install GTK 3 (`sudo apt install libgtk-3-0`, or your distro's equivalent). |
 | Browser says "Where isn't running" | Open Where first. Only one copy can run the browser connection. |
 | Browser extension missing | Settings → Browser in Where shows the three install steps. |

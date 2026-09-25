@@ -13,6 +13,28 @@ Planned next — see the Notion roadmap:
 - Global shortcut (Ctrl+Space) to open Where from anywhere
 - Linking notes to files and people
 
+## [0.4.0] — 2026-09-25 · Loading screen and ready-to-run downloads
+
+### Added
+- **Loading screen.** Where opens straight away with an animated logo, a light
+  circling it, a progress bar and each startup step ("Finding your library…",
+  "Starting the search engine…"), then fades into the app. It uses your saved
+  light/dark theme, and shows a clear message if something goes wrong.
+- **Windows installer** — `Where-Setup-<version>-windows-x64.exe`: installs
+  for your user without an admin prompt, adds a Start menu shortcut (desktop
+  optional), an uninstaller, and opens Where when done. Your data is kept if
+  you uninstall.
+- **Linux AppImage** — one file that runs on most distributions — and a
+  **.deb** for Ubuntu, Debian and Mint (installs to `/opt/where`, adds a
+  menu entry and a `where` command). Both for x64 and ARM.
+- The Windows downloads include the Microsoft C++ runtime, so Where starts on
+  PCs without the Visual C++ Redistributable.
+
+### Changed
+- The Windows zip is now the *portable* download
+  (`…-windows-x64-portable.zip`); the installer is the main one.
+- Release notes list which file to pick for each computer.
+
 ## [0.3.0] — 2026-09-25 · Windows, Mac and Linux
 
 ### Added
@@ -128,7 +150,8 @@ that connects your projects, tasks, notes and files.
 - No sync, accounts, AI or activity tracking (all by design for now).
 - Windows only for the desktop app; macOS and Linux come later (added in 0.3.0).
 
-[Unreleased]: https://github.com/CodingJeffRoblox/Where/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/CodingJeffRoblox/Where/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/CodingJeffRoblox/Where/releases/tag/v0.4.0
 [0.3.0]: https://github.com/CodingJeffRoblox/Where/releases/tag/v0.3.0
 [0.2.0]: https://github.com/CodingJeffRoblox/Where/releases/tag/v0.2.0
 [0.1.0]: https://github.com/CodingJeffRoblox/Where/releases/tag/v0.1.0

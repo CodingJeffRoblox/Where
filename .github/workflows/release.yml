@@ -36,19 +36,36 @@ jobs:
         run: |
           flutter pub get
           flutter build windows --release
-      - name: Package
+      - name: Package (portable zip)
         shell: pwsh
         run: |
           $version = (Select-String -Path Cargo.toml -Pattern '^version = "(.*)"').Matches[0].Groups[1].Value
+          "WHERE_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
           $out = "apps/where_flutter/build/windows/x64/runner/Release"
           Copy-Item target/release/where_ffi.dll $out/
           Copy-Item target/release/where-cli.exe $out/
           Copy-Item -Recurse browser-extension "$out/browser-extension"
+          # Ship the Microsoft C++ runtime next to Where.exe so it starts on
+          # PCs that don't have the Visual C++ Redistributable installed.
+          foreach ($dll in 'msvcp140.dll','vcruntime140.dll','vcruntime140_1.dll') {
+            Copy-Item "$env:WINDIR\System32\$dll" $out/
+          }
           New-Item -ItemType Directory -Force dist | Out-Null
           $stage = "stage/Where"
           New-Item -ItemType Directory -Force $stage | Out-Null
           Copy-Item -Recurse "$out/*" $stage/
-          Compress-Archive -Path $stage -DestinationPath "dist/Where-$version-windows-x64.zip" -Force
+          Compress-Archive -Path $stage -DestinationPath "dist/Where-$version-windows-x64-portable.zip" -Force
+      - name: Build installer (Where-Setup.exe)
+        shell: pwsh
+        run: |
+          choco install innosetup -y --no-progress | Out-Null
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          & $iscc /Qp "/DAppVersion=$env:WHERE_VERSION" `
+            "/DSourceDir=$PWD\stage\Where" "/DOutDir=$PWD\dist" `
+            "/DIconFile=$PWD\apps\where_flutter\windows\runner\resources\app_icon.ico" `
+            installer\windows\where.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-ChildItem dist
       - uses: actions/upload-artifact@v4
         with:
           name: where-windows-x64
@@ -100,7 +117,16 @@ jobs:
         run: |
           git clone --depth 1 -b stable https://github.com/flutter/flutter.git "$HOME/flutter"
           echo "$HOME/flutter/bin" >> "$GITHUB_PATH"
-      - name: Build and package
+      - name: Get appimagetool
+        run: |
+          tool_arch=$([ "${{ matrix.arch }}" = x64 ] && echo x86_64 || echo aarch64)
+          curl -fsSL -o "$RUNNER_TEMP/appimagetool" \
+            "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-$tool_arch.AppImage"
+          chmod +x "$RUNNER_TEMP/appimagetool"
+          echo "APPIMAGETOOL=$RUNNER_TEMP/appimagetool" >> "$GITHUB_ENV"
+          # Runners have no FUSE; let AppImages unpack themselves instead.
+          echo "APPIMAGE_EXTRACT_AND_RUN=1" >> "$GITHUB_ENV"
+      - name: Build and package (.tar.gz, .deb, .AppImage)
         run: |
           flutter config --no-analytics --enable-linux-desktop
           bash scripts/package.sh --archive
@@ -149,13 +175,15 @@ jobs:
 
           ## Downloads
 
-          | Your computer | Download |
-          |---|---|
-          | Windows 10/11 | `Where-…-windows-x64.zip` — unzip, run `Where.exe` |
-          | Mac (Apple Silicon or Intel) | `Where-…-macos-universal.dmg` — drag Where to Applications |
-          | Linux (Intel/AMD) | `Where-…-linux-x64.tar.gz` — unpack, run `./install.sh` |
-          | Linux (ARM) | `Where-…-linux-arm64.tar.gz` |
-          | Chrome / Edge / Brave | `Where-…-browser-extension.zip` — see Settings → Browser |
+          | Your computer | Download | How |
+          |---|---|---|
+          | **Windows** 10 / 11 | `Where-Setup-…-windows-x64.exe` | Run it — installs Where with a Start menu shortcut |
+          | Windows (no install) | `Where-…-windows-x64-portable.zip` | Unzip, run `Where.exe` |
+          | **Mac** (Apple Silicon or Intel) | `Where-…-macos-universal.dmg` | Open, drag Where to Applications |
+          | **Linux** (any distro) | `Where-…-linux-x64.AppImage` | `chmod +x` it, then double-click |
+          | Ubuntu / Debian / Mint | `Where-…-linux-x64.deb` | `sudo apt install ./Where-…deb` |
+          | Linux (ARM) | `…-linux-arm64.AppImage` / `.deb` / `.tar.gz` | Same as above |
+          | Chrome / Edge / Brave | `Where-…-browser-extension.zip` | See Settings → Browser in Where |
 
           **First launch:** these builds aren't signed yet. On Windows click
           *More info → Run anyway*. On a Mac, right-click Where → *Open* the first time.

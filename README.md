@@ -9,7 +9,7 @@
 Your files, notes, tasks and projects, connected and searchable in one place.
 Local-first. Private by default. No account needed.
 
-[![Version](https://img.shields.io/badge/version-0.3.0_alpha-4F5BD5)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.4.0_alpha-4F5BD5)](CHANGELOG.md)
 [![CI](https://github.com/CodingJeffRoblox/Where/actions/workflows/ci.yml/badge.svg)](https://github.com/CodingJeffRoblox/Where/actions/workflows/ci.yml)
 ![Platform](https://img.shields.io/badge/platform-Windows_%7C_macOS_%7C_Linux-0078D6)
 ![Rust](https://img.shields.io/badge/core-Rust-B7410E)
@@ -67,10 +67,12 @@ Get the file for your computer from the
 
 | Your computer | Download | Then |
 |---|---|---|
-| **Windows** 10 / 11 | `Where-…-windows-x64.zip` | Unzip, run `Where.exe` |
-| **Mac** (Apple Silicon or Intel) | `Where-…-macos-universal.dmg` | Drag Where to Applications |
-| **Linux** (Intel / AMD) | `Where-…-linux-x64.tar.gz` | Unpack, run `./install.sh`, open Where from your menu |
-| **Linux** (ARM) | `Where-…-linux-arm64.tar.gz` | Same as above |
+| **Windows** 10 / 11 | `Where-Setup-…-windows-x64.exe` | Run it. Where is added to the Start menu. |
+| Windows, no install | `Where-…-windows-x64-portable.zip` | Unzip, run `Where.exe` |
+| **Mac** (Apple Silicon or Intel) | `Where-…-macos-universal.dmg` | Open it, drag Where to Applications |
+| **Linux** (any distro) | `Where-…-linux-x64.AppImage` | `chmod +x` the file, then run it |
+| Ubuntu / Debian / Mint | `Where-…-linux-x64.deb` | `sudo apt install ./Where-…-linux-x64.deb` |
+| Linux on ARM | `…-linux-arm64.AppImage` or `.deb` | Same as above |
 
 These builds aren't signed yet. The first time: on Windows click
 **More info → Run anyway**; on a Mac right-click Where → **Open**.
@@ -177,11 +179,12 @@ apps/where_flutter ──dart:ffi──► where_ffi ──► where_search ─�
 | `crates/where_cli/` | Command-line tool |
 | `browser-extension/` | Save pages from Chrome, Edge or Brave |
 | `scripts/` | Packaging for Mac and Linux (used by `start-where.sh` and releases) |
+| `installer/` | Windows installer (Inno Setup) |
 | `docs/` | [Product spec](docs/SPEC.md) and [architecture decisions](docs/adr/) |
 
 ## Status
 
-**v0.3.0 — alpha.** Windows, Mac and Linux. See the [changelog](CHANGELOG.md).
+**v0.4.0 — alpha.** Windows, Mac and Linux, with installers. See the [changelog](CHANGELOG.md).
 
 | Spec §38 question | Status |
 |---|---|

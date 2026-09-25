@@ -19,7 +19,7 @@ class BrowserBridge {
   BrowserBridge(this.state);
 
   static const port = 47771;
-  static const version = '0.3.0';
+  static const version = '0.4.0';
   static const _maxBody = 64 * 1024;
 
   final WhereState state;

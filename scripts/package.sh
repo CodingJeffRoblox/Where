@@ -151,6 +151,81 @@ else
   APP_PATH="$OUT"
 fi
 
+# --------------------------------------------------------- linux packages ----
+DESKTOP_ID="com.crowncorestudios.where"
+
+desktop_entry() {  # $1 = Exec line
+  cat <<DESKTOP
+[Desktop Entry]
+Type=Application
+Name=Where
+GenericName=Search
+Comment=Find what you're looking for
+Exec=$1
+Icon=$DESKTOP_ID
+Terminal=false
+Categories=Utility;Office;
+Keywords=search;find;files;notes;tasks;projects;links;
+StartupWMClass=Where
+DESKTOP
+}
+
+# .deb for Debian, Ubuntu, Mint, Pop!_OS...  Installs to /opt/where.
+build_deb() {
+  local debarch; debarch=$([[ "$ARCH" == x64 ]] && echo amd64 || echo arm64)
+  local work; work="$(mktemp -d)"
+  local pkg="$work/where_${VERSION}_${debarch}"
+  mkdir -p "$pkg/DEBIAN" "$pkg/opt/where" "$pkg/usr/bin" \
+    "$pkg/usr/share/applications" "$pkg/usr/share/icons/hicolor/512x512/apps"
+  cp -R "$OUT/." "$pkg/opt/where/"
+  rm -f "$pkg/opt/where/install.sh"
+  ln -s /opt/where/Where "$pkg/usr/bin/where"
+  desktop_entry "/opt/where/Where" > "$pkg/usr/share/applications/$DESKTOP_ID.desktop"
+  cp "$ROOT/assets/icon/where-512.png" "$pkg/usr/share/icons/hicolor/512x512/apps/$DESKTOP_ID.png"
+  cat > "$pkg/DEBIAN/control" <<CONTROL
+Package: where
+Version: $VERSION
+Architecture: $debarch
+Maintainer: CodingJeffRoblox <CodingJeffRoblox@users.noreply.github.com>
+Depends: libgtk-3-0 | libgtk-3-0t64
+Section: utils
+Priority: optional
+Homepage: https://github.com/CodingJeffRoblox/Where
+Description: Find what you're looking for
+ Where connects your files, notes, tasks, projects and saved links in one
+ private, offline search. Nothing leaves your computer.
+CONTROL
+  find "$pkg" -type d -exec chmod 755 {} +
+  dpkg-deb --root-owner-group --build "$pkg" "$ROOT/dist/Where-$VERSION-linux-$ARCH.deb" >/dev/null
+  rm -rf "$work"
+  say "OK dist/Where-$VERSION-linux-$ARCH.deb"
+}
+
+# AppImage: one file that runs on most Linux distributions.
+build_appimage() {
+  local tool="${APPIMAGETOOL:-appimagetool}"
+  local work; work="$(mktemp -d)"
+  local appdir="$work/Where.AppDir"
+  mkdir -p "$appdir/usr/lib/where"
+  cp -R "$OUT/." "$appdir/usr/lib/where/"
+  rm -f "$appdir/usr/lib/where/install.sh"
+  cat > "$appdir/AppRun" <<'APPRUN'
+#!/bin/sh
+HERE="$(dirname "$(readlink -f "$0")")"
+exec "$HERE/usr/lib/where/Where" "$@"
+APPRUN
+  chmod +x "$appdir/AppRun"
+  desktop_entry "Where" > "$appdir/$DESKTOP_ID.desktop"
+  cp "$ROOT/assets/icon/where-512.png" "$appdir/$DESKTOP_ID.png"
+  cp "$ROOT/assets/icon/where-512.png" "$appdir/.DirIcon"
+  local image="$ROOT/dist/Where-$VERSION-linux-$ARCH.AppImage"
+  # appimagetool reads the CPU type from ARCH, spelled its own way.
+  local tool_arch; tool_arch=$([[ "$ARCH" == x64 ]] && echo x86_64 || echo aarch64)
+  env ARCH="$tool_arch" "$tool" --no-appstream "$appdir" "$image" >/dev/null
+  rm -rf "$work"
+  say "OK dist/Where-$VERSION-linux-$ARCH.AppImage"
+}
+
 # ---------------------------------------------------------------- archive ----
 if [[ "$ARCHIVE" == 1 ]]; then
   mkdir -p "$ROOT/dist"
@@ -163,6 +238,8 @@ if [[ "$ARCHIVE" == 1 ]]; then
     tar -C "$STAGE" -czf "$ROOT/dist/$NAME.tar.gz" Where
     rm -rf "$STAGE"
     say "OK dist/$NAME.tar.gz"
+    if command -v dpkg-deb >/dev/null; then build_deb; fi
+    if [[ -n "${APPIMAGETOOL:-}" ]] || command -v appimagetool >/dev/null; then build_appimage; fi
   else
     SUFFIX=$([[ "$UNIVERSAL" == 1 ]] && echo universal || echo "$ARCH")
     NAME="Where-$VERSION-macos-$SUFFIX"
