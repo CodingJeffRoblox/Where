@@ -115,11 +115,13 @@ If something goes wrong, the script shows the last lines of its log:
 
 ### Publishing a release
 
-Push a version tag (`git tag -a v0.3.0 -m "…" && git push origin v0.3.0`).
-GitHub then builds the Windows, Mac and Linux downloads on its own machines
-and attaches them to a Release, with notes taken from
-[CHANGELOG.md](CHANGELOG.md). See
-[`.github/workflows/release.yml`](.github/workflows/release.yml).
+1. Write the notes in `docs/releases/vX.Y.Z.md` (first line `# Title` becomes
+   the release name). Without a file, the CHANGELOG section is used.
+2. Push to `main`, then push a tag: `git tag -a vX.Y.Z -m "…"` and
+   `git push origin vX.Y.Z`.
+3. GitHub builds the Windows, Mac and Linux downloads on its own machines and
+   publishes the Release. See
+   [`.github/workflows/release.yml`](.github/workflows/release.yml).
 
 ## Save links from your browser
 

@@ -163,8 +163,18 @@ jobs:
         with:
           path: dist
           merge-multiple: true
-      - name: Release notes from CHANGELOG
+      - name: Release notes
+        # Uses docs/releases/<tag>.md if it exists; otherwise the CHANGELOG
+        # section for this version plus a table of downloads.
         run: |
+          custom="docs/releases/${GITHUB_REF_NAME}.md"
+          if [ -f "$custom" ]; then
+            # The file's own "# title" line becomes the release name instead.
+            sed '1{/^# /d}' "$custom" > notes.md
+            echo "RELEASE_NAME=$(sed -n '1s/^# //p' "$custom")" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          echo "RELEASE_NAME=Where ${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
           version="${GITHUB_REF_NAME#v}"
           awk -v v="$version" '
             $0 ~ "^## \\[" v "\\]" {on=1; next}
@@ -190,6 +200,7 @@ jobs:
           EOF
       - uses: softprops/action-gh-release@v2
         with:
+          name: ${{ env.RELEASE_NAME }}
           body_path: notes.md
           files: dist/*
           fail_on_unmatched_files: false
