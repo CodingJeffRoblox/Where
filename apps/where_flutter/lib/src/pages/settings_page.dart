@@ -158,7 +158,7 @@ class SettingsPage extends StatelessWidget {
               FadeSlideIn(
                 index: 5,
                 child: Center(
-                  child: Text('Where 0.1 · pre-alpha · local-first',
+                  child: Text('Where 0.1.0 · alpha · local-first',
                       style: t.labelMedium?.copyWith(color: scheme.onSurfaceVariant)),
                 ),
               ),
