@@ -1,13 +1,77 @@
-/target
-*.db
-*.db-wal
-*.db-shm
-.DS_Store
-# Flutter
-apps/where_flutter/.dart_tool/
-apps/where_flutter/build/
-apps/where_flutter/.flutter-plugins*
+# ---------------------------------------------------------------------------
+# Only source code and docs belong in this repo. Everything below is either
+# generated, machine-specific, or private — never commit it.
+# Check before pushing:  git status   and   git ls-files -ci --exclude-standard
+# ---------------------------------------------------------------------------
+
+# --- Build output ----------------------------------------------------------
+/target/
+**/build/
+.dart_tool/
+**/.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
 apps/where_flutter/pubspec.lock
+apps/where_flutter/windows/flutter/ephemeral/
+*.exe
+*.dll
+*.pdb
+*.lib
+*.exp
+*.obj
+*.msi
+*.msix
+
 # Platform folders other than Windows are generated on demand
 apps/where_flutter/linux/
 apps/where_flutter/macos/
+apps/where_flutter/android/
+apps/where_flutter/ios/
+apps/where_flutter/web/
+
+# --- Your data: databases, exports, logs (private) ---------------------------
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+*.sqlite
+*.sqlite3
+where-export-*
+*.log
+setup-log.txt
+*.dmp
+
+# --- Secrets and credentials -----------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+*.jks
+*.keystore
+id_rsa*
+id_ed25519*
+credentials*.json
+secrets.*
+*.secret
+
+# --- Downloads and packages (update zips, bundles, installers) --------------
+*.zip
+*.7z
+*.rar
+*.bundle
+*.crx
+
+# --- Editors and operating systems -------------------------------------------
+.vscode/
+.idea/
+*.iml
+*.swp
+*.suo
+*.user
+.vs/
+.DS_Store
+Thumbs.db
+desktop.ini

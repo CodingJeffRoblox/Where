@@ -1,13 +1,70 @@
-# Contributing
+# Contributing to Where
 
-1. Pick a task from Notion (Where → Roadmap) and set it to **In progress**.
-2. Branch: `feat/<short-name>` or `fix/<short-name>`.
-3. Keep `cargo fmt`, `cargo clippy -D warnings` and `cargo test` green.
-4. Open a PR; paste the Notion task link in the description. Once merged,
-   mark the task **Done** and add the PR link to it.
-5. Significant technical choices get an ADR in `docs/adr/` and a row in the
-   Notion Decisions log.
+Thanks for helping. Where is small and early, so the process is light.
 
-Product boundaries (spec §40) are non-negotiable: never delete user files,
-never send messages, never upload data by default, always confirm
-destructive actions.
+## Before you start
+
+- Read the [product spec](docs/SPEC.md) — especially the principles (§5)
+  and the product boundaries (§40).
+- Look at open [issues](https://github.com/CodingJeffRoblox/Where/issues)
+  or the roadmap. For anything bigger than a small fix, open an issue first
+  so we can agree on the approach.
+
+## Set up
+
+Windows: double-click `start-where.bat` — it installs the tools and builds
+everything. Other platforms: install Rust and Flutter, then see
+[`apps/where_flutter/README.md`](apps/where_flutter/README.md).
+
+## Make a change
+
+1. Branch from `main`: `feat/<short-name>` or `fix/<short-name>`.
+2. Keep these green before you push:
+   ```sh
+   cargo fmt --all
+   cargo clippy --all-targets -- -D warnings
+   cargo test --all
+   ```
+   For the app: `flutter analyze` and `flutter test` in `apps/where_flutter`.
+3. Write commit messages in the imperative: *"Add link filter"*, not
+   *"added…"*.
+4. Update [`CHANGELOG.md`](CHANGELOG.md) under **Unreleased** for anything
+   a user would notice.
+5. Open a pull request and fill in the template.
+
+Significant technical choices get a short ADR in [`docs/adr/`](docs/adr/).
+
+## Keep private things out of the repo
+
+Only source code and docs belong here. **Before every push**, check what
+you're about to commit:
+
+```sh
+git status
+git diff --cached --stat
+```
+
+Never commit databases (`*.db`), exports, logs, build output, `.env` files,
+keys or passwords. [`.gitignore`](.gitignore) blocks the common ones — if
+something slips through, remove it from the repo (it stays on your disk):
+
+```sh
+git rm -r --cached .
+git add .
+git commit -m "Stop tracking files that aren't source code"
+```
+
+Use GitHub's private email for commits so your real address isn't public:
+GitHub → Settings → Emails → *Keep my email addresses private*, then
+`git config --global user.email "<id>+<username>@users.noreply.github.com"`.
+
+## Product rules that reviews will check
+
+Where must never delete or change the user's files, send messages, upload
+data by default, or run commands without confirmation (spec §40). New
+permissions — a folder, a browser, an integration — must be explicit and
+visible in Settings.
+
+## Code of conduct
+
+Be kind and constructive. See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).

@@ -164,7 +164,7 @@ integrations (GitHub, Google Drive, calendar), optional AI search, plugins.
 
 Your data is yours · works offline · private by default · no required AI ·
 never deletes your files, sends messages or uploads anything without you
-asking.
+asking. Details: [PRIVACY.md](PRIVACY.md).
 
 ## Development
 
@@ -176,3 +176,21 @@ cargo fmt --all
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). Work is planned in Notion
 (Where → Roadmap & Tasks); link the Notion task in each pull request.
+
+## Project documents
+
+| | |
+|---|---|
+| [CHANGELOG.md](CHANGELOG.md) | What changed in each version |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | How to help, and keeping private files out of the repo |
+| [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | How we treat each other |
+| [SECURITY.md](SECURITY.md) | Reporting vulnerabilities privately |
+| [PRIVACY.md](PRIVACY.md) | What Where stores and what it never does |
+| [SUPPORT.md](SUPPORT.md) | Getting help and common fixes |
+| [docs/](docs/) | Product spec and architecture decisions |
+
+## License
+
+No license has been chosen yet, so all rights are reserved by the author.
+You're welcome to read the code and suggest changes; please ask before
+reusing it elsewhere.

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security problem
+    url: https://github.com/CodingJeffRoblox/Where/security/advisories/new
+    about: Please report vulnerabilities privately, not as a public issue.
+  - name: Setup help
+    url: https://github.com/CodingJeffRoblox/Where/blob/main/SUPPORT.md
+    about: Common fixes for start-where.bat and the browser extension.

@@ -33,6 +33,14 @@ Planned next — see the Notion roadmap:
 ### Changed
 - Files moved to Ctrl 6 (Links is Ctrl 5).
 - `start-where.bat` copies the extension next to the app.
+- Stricter `.gitignore`: build output, databases, exports, logs, keys,
+  `.env` files and downloaded zips can't be committed by accident.
+
+### Docs
+- Added CODE_OF_CONDUCT, SECURITY, PRIVACY and SUPPORT, issue and pull
+  request templates, CODEOWNERS, a docs index and ADR 5 (browser bridge).
+- CONTRIBUTING explains how to keep private files and your email out of
+  the repo.
 
 ## [0.1.0] — 2026-09-24 · Alpha prototype
 
