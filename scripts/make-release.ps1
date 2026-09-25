@@ -85,10 +85,19 @@ $WinOut = Join-Path $Root 'apps\where_flutter\build\windows\x64\runner\Release'
 if (Test-Path (Join-Path $WinOut 'Where.exe')) {
   $built = (Get-Item (Join-Path $WinOut 'Where.exe')).LastWriteTime
   Work "Windows app found (built $built)"
-  $engine = Join-Path $Root 'target\release\where_ffi.dll'
-  if (Test-Path $engine) { Copy-Item $engine $WinOut -Force }
-  $cli = Join-Path $Root 'target\release\where-cli.exe'
-  if (Test-Path $cli) { Copy-Item $cli $WinOut -Force }
+  # A running Where locks its files, so close it before copying.
+  $running = Get-Process -Name 'Where' -ErrorAction SilentlyContinue
+  if ($running) {
+    Work "Closing Where so its files can be updated..."
+    $running | Stop-Process -Force -ErrorAction SilentlyContinue
+    Start-Sleep -Seconds 2
+  }
+  foreach ($name in 'where_ffi.dll', 'where-cli.exe') {
+    $src = Join-Path $Root "target\release\$name"
+    if (-not (Test-Path $src)) { continue }
+    try { Copy-Item $src $WinOut -Force -ErrorAction Stop }
+    catch { Warn "Couldn't update $name (in use?) - using the copy already next to Where.exe." }
+  }
   if (-not (Test-Path (Join-Path $WinOut 'where_ffi.dll'))) { Fail "where_ffi.dll is missing next to Where.exe. Run start-where.bat first." }
   # Microsoft C++ runtime, so Where starts on PCs without the redistributable.
   foreach ($dll in 'msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll') {
@@ -199,7 +208,7 @@ if (-not ($files.Name -match 'linux')) { $missing += 'Linux' }
 if ($missing.Count) {
   Warn ("No " + ($missing -join ' or ') + " files. Add them to release-files\ or run: make-release.bat -Fetch")
 }
-if (-not (Ask "Publish these to GitHub as $Tag?")) { Write-Host "    Cancelled. Files are in $Dist"; exit 0 }
+if (-not (Ask "Publish these to GitHub as ${Tag}?")) { Write-Host "    Cancelled. Files are in $Dist"; exit 0 }
 
 # ---------------------------------------------------------------- publish ----
 Head "[5/5] Publishing"
