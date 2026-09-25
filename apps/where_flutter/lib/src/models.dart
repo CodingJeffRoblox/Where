@@ -126,11 +126,11 @@ class KindInfo {
     KindInfo('project', 'Project', 'Projects', Icons.folder_special_outlined, Colors.indigo, 0),
     KindInfo('task', 'Task', 'Tasks', Icons.check_circle_outline, Colors.teal, 1),
     KindInfo('note', 'Note', 'Notes', Icons.sticky_note_2_outlined, Colors.amber, 2),
-    KindInfo('file', 'File', 'Files', Icons.insert_drive_file_outlined, Colors.blueGrey, 3),
-    KindInfo('folder', 'Folder', 'Folders', Icons.folder_outlined, Colors.brown, 4),
+    KindInfo('file', 'File', 'Files', Icons.insert_drive_file_outlined, Colors.blueGrey, 4),
+    KindInfo('folder', 'Folder', 'Folders', Icons.folder_outlined, Colors.brown, 5),
     KindInfo('person', 'Person', 'People', Icons.person_outline, Colors.cyan, 5),
     KindInfo('website', 'Website', 'Websites', Icons.language, Colors.lightBlue, 6),
-    KindInfo('bookmark', 'Bookmark', 'Bookmarks', Icons.bookmark_outline, Colors.orange, 7),
+    KindInfo('bookmark', 'Link', 'Links', Icons.link_rounded, Colors.orange, 3),
     KindInfo('image', 'Image', 'Images', Icons.image_outlined, Colors.pink, 8),
     KindInfo('video', 'Video', 'Videos', Icons.movie_outlined, Colors.deepPurple, 9),
     KindInfo('repository', 'Repository', 'Repositories', Icons.code, Colors.green, 10),
@@ -180,4 +180,32 @@ String timeAgo(DateTime t) {
   final l = t.toLocal();
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   return '${months[l.month - 1]} ${l.day}, ${l.year}';
+}
+
+/// Helpers for saved web links (kind "bookmark").
+class LinkInfo {
+  /// Stable key so saving the same page twice updates one link.
+  static String sourceKey(String url) => 'url:${normalize(url)}';
+
+  /// Trims whitespace and a trailing slash; drops the #fragment.
+  static String normalize(String url) {
+    var u = url.trim();
+    final hash = u.indexOf('#');
+    if (hash > 0) u = u.substring(0, hash);
+    if (u.endsWith('/') && u.indexOf('/', u.indexOf('//') + 2) == u.length - 1) {
+      u = u.substring(0, u.length - 1);
+    }
+    return u;
+  }
+
+  /// Only http(s) links are accepted — never javascript:, file: etc.
+  static bool isWebUrl(String url) {
+    final uri = Uri.tryParse(url.trim());
+    return uri != null && (uri.scheme == 'http' || uri.scheme == 'https') && uri.host.isNotEmpty;
+  }
+
+  static String domain(String url) {
+    final host = Uri.tryParse(url)?.host ?? url;
+    return host.startsWith('www.') ? host.substring(4) : host;
+  }
 }

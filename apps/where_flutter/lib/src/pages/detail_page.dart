@@ -7,6 +7,7 @@ import '../models.dart';
 import '../state.dart';
 import '../theme.dart';
 import '../widgets.dart';
+import 'links_page.dart';
 import 'tasks_page.dart';
 
 /// One object and everything connected to it.
@@ -57,8 +58,22 @@ class _TopBar extends StatelessWidget {
         const SizedBox(width: 6),
         if (o != null) Pill(o.info.singular, icon: o.info.icon, color: o.info.color(context)),
         const Spacer(),
-        if (o != null && (o.kind == 'task' || o.kind == 'note' || o.kind == 'folder'))
+        if (o != null && (o.kind == 'task' || o.kind == 'note' || o.kind == 'folder' || o.kind == 'bookmark'))
           _ProjectMenu(object: o, current: detail!.parents.where((p) => p.kind == 'project').toList()),
+        if (o != null && o.kind == 'bookmark' && o.prop('url') != null) ...[
+          const SizedBox(width: 6),
+          OutlinedButton.icon(
+            onPressed: () => copyText(context, o.prop('url')!),
+            icon: const Icon(Icons.content_copy_rounded, size: 16),
+            label: const Text('Copy link'),
+          ),
+          const SizedBox(width: 6),
+          FilledButton.icon(
+            onPressed: () => openUrl(context, o.prop('url')!),
+            icon: const Icon(Icons.open_in_new_rounded, size: 18),
+            label: const Text('Open in browser'),
+          ),
+        ],
         if (o != null && o.prop('path') != null) ...[
           const SizedBox(width: 6),
           OutlinedButton.icon(
@@ -264,10 +279,23 @@ class _DetailBodyState extends State<_DetailBody> {
                     ),
                   ]),
                 ),
+                if (o.kind == 'bookmark' && o.prop('url') != null)
+                  FadeSlideIn(
+                    index: 1,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 60, top: 2),
+                      child: Row(children: [
+                        SiteAvatar(url: o.prop('url')!, size: 22),
+                        const SizedBox(width: 8),
+                        Flexible(child: UrlText(url: o.prop('url')!, style: t.bodyLarge, maxLines: 2)),
+                      ]),
+                    ),
+                  ),
                 const SizedBox(height: 6),
                 FadeSlideIn(
                   index: 1,
                   child: Text(
+                    '${o.prop('saved_from') != null && o.kind == 'bookmark' ? 'Saved from ${o.prop('saved_from')} · ' : ''}'
                     'Created ${timeAgo(o.createdAt)} · Updated ${timeAgo(o.updatedAt)}',
                     style: t.labelMedium?.copyWith(color: scheme.onSurfaceVariant),
                   ),
@@ -310,10 +338,14 @@ class _DetailBodyState extends State<_DetailBody> {
                         controller: _body,
                         onChanged: _onBodyChanged,
                         maxLines: null,
-                        minLines: o.kind == 'note' ? 12 : 4,
+                        minLines: o.kind == 'note' ? 12 : (o.kind == 'bookmark' ? 6 : 4),
                         style: t.bodyLarge?.copyWith(height: 1.55),
                         decoration: InputDecoration(
-                          hintText: o.kind == 'note' ? 'Start writing…' : 'Add details…',
+                          hintText: o.kind == 'note'
+                              ? 'Start writing…'
+                              : o.kind == 'bookmark'
+                                  ? 'Add a note about this site…'
+                                  : 'Add details…',
                           contentPadding: const EdgeInsets.all(18),
                         ),
                       ),
@@ -344,6 +376,11 @@ class _DetailBodyState extends State<_DetailBody> {
                           onPressed: () => newObject(context, 'note', project: o),
                           icon: const Icon(Icons.note_add_outlined, size: 18),
                           label: const Text('Add note'),
+                        ),
+                        FilledButton.tonalIcon(
+                          onPressed: () => showAddLinkDialog(context, project: o),
+                          icon: const Icon(Icons.add_link, size: 18),
+                          label: const Text('Add link'),
                         ),
                         OutlinedButton.icon(
                           onPressed: () => _indexIntoProject(context),
@@ -376,7 +413,9 @@ class _DetailBodyState extends State<_DetailBody> {
                         index: i + 5,
                         child: entry.value[i].object.kind == 'task'
                             ? TaskRow(task: entry.value[i].object, showProject: false)
-                            : _RelatedRow(object: entry.value[i].object),
+                            : entry.value[i].object.kind == 'bookmark'
+                                ? LinkRow(link: entry.value[i].object, showProject: false)
+                                : _RelatedRow(object: entry.value[i].object),
                       ),
                     ),
                   const SizedBox(height: 14),

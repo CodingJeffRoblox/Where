@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'command_palette.dart';
 import 'pages/files_page.dart';
 import 'pages/home_page.dart';
+import 'pages/links_page.dart';
 import 'pages/notes_page.dart';
 import 'pages/projects_page.dart';
 import 'pages/settings_page.dart';
@@ -27,7 +28,8 @@ class Shell extends StatelessWidget {
         const SingleActivator(LogicalKeyboardKey.digit2, control: true): () => state.go(Section.projects),
         const SingleActivator(LogicalKeyboardKey.digit3, control: true): () => state.go(Section.tasks),
         const SingleActivator(LogicalKeyboardKey.digit4, control: true): () => state.go(Section.notes),
-        const SingleActivator(LogicalKeyboardKey.digit5, control: true): () => state.go(Section.files),
+        const SingleActivator(LogicalKeyboardKey.digit5, control: true): () => state.go(Section.links),
+        const SingleActivator(LogicalKeyboardKey.digit6, control: true): () => state.go(Section.files),
         const SingleActivator(LogicalKeyboardKey.comma, control: true): () => state.go(Section.settings),
       },
       child: Focus(
@@ -83,6 +85,8 @@ class _SectionHost extends StatelessWidget {
         return const TasksPage();
       case Section.notes:
         return const NotesPage();
+      case Section.links:
+        return const LinksPage();
       case Section.files:
         return const FilesPage();
       case Section.settings:

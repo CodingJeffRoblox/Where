@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -21,6 +22,8 @@ Future<void> main() async {
       libraryPath: Platform.environment['WHERE_FFI_LIB'],
     );
     state = WhereState(core, File('${dir.path}${sep}settings.json'));
+    // Lets the Where browser extension save links (127.0.0.1 only).
+    unawaited(state.bridge.start());
   } catch (e) {
     error = '$e';
   }

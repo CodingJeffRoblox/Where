@@ -236,6 +236,7 @@ class _HomePageState extends State<HomePage> {
           _QuickAction(Icons.create_new_folder_outlined, 'New project', () => newObject(context, 'project')),
           _QuickAction(Icons.add_task, 'New task', () => newObject(context, 'task')),
           _QuickAction(Icons.note_add_outlined, 'New note', () => newObject(context, 'note')),
+          _QuickAction(Icons.add_link, 'Add a link', () => showAddLinkDialog(context)),
           _QuickAction(Icons.folder_open_outlined, 'Index a folder', () => pickAndIndexFolder(context)),
         ]),
       ),
@@ -248,6 +249,8 @@ class _HomePageState extends State<HomePage> {
           _Stat('Tasks', count(['task']), Section.tasks),
           const SizedBox(width: 12),
           _Stat('Notes', count(['note']), Section.notes),
+          const SizedBox(width: 12),
+          _Stat('Links', count(['bookmark']), Section.links),
           const SizedBox(width: 12),
           _Stat('Files', count(['file', 'image', 'video']), Section.files),
         ]),
@@ -296,7 +299,9 @@ class _ResultRow extends StatelessWidget {
     final t = Theme.of(context).textTheme;
     final subtitle = hit.viaContainer
         ? 'Contains ${hit.via.take(3).join(', ')}${hit.via.length > 3 ? '…' : ''}'
-        : o.prop('path') ?? (o.body.isNotEmpty ? o.body.replaceAll('\n', ' ') : null);
+        : o.kind == 'bookmark'
+            ? [LinkInfo.domain(o.prop('url') ?? ''), if (o.body.isNotEmpty) o.body.replaceAll('\n', ' ')].join(' · ')
+            : o.prop('path') ?? (o.body.isNotEmpty ? o.body.replaceAll('\n', ' ') : null);
     return HoverCard(
       selected: selected,
       onTap: onTap,
@@ -324,6 +329,13 @@ class _ResultRow extends StatelessWidget {
           const SizedBox(width: 10),
           Pill(statusLabel(o.status), color: statusColor(context, o.status)),
         ],
+        if (o.kind == 'bookmark' && o.prop('url') != null)
+          IconButton(
+            tooltip: 'Open in browser',
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.open_in_new_rounded, size: 18),
+            onPressed: () => openUrl(context, o.prop('url')!),
+          ),
         const SizedBox(width: 8),
         Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant.withAlpha(selected ? 255 : 90)),
       ]),

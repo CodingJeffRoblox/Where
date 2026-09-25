@@ -13,6 +13,27 @@ Planned next — see the Notion roadmap:
 - Global shortcut (Ctrl+Space) to open Where from anywhere
 - Linking notes to files and people
 
+## [0.2.0] — 2026-09-25 · Save links from your browser
+
+### Added
+- **Where browser extension** for Chrome, Edge, Brave, Opera and Vivaldi
+  (`browser-extension/`). Click the Where button or press **Alt+Shift+W** to
+  save the page you're on with a title, a note and a project. Right-click a
+  page or a link for *Save to Where*. Saving a page again updates it.
+- **Browser connection** in the app: private to this computer
+  (127.0.0.1:47771), and every browser must be approved once with an
+  Allow / Deny prompt. Settings → Browser shows setup steps and lets you
+  disconnect browsers.
+- **Links** section (Ctrl 5): saved sites with clickable addresses, notes,
+  projects, filter, copy and *Open in browser*. Sites show a letter avatar —
+  no icons are downloaded, so nothing about your links leaves your computer.
+- **Add link** by hand from Links, Home, a project page, or Ctrl K.
+- Links appear in search, including by web address.
+
+### Changed
+- Files moved to Ctrl 6 (Links is Ctrl 5).
+- `start-where.bat` copies the extension next to the app.
+
 ## [0.1.0] — 2026-09-24 · Alpha prototype
 
 The first version of Where: a local-first search engine and a desktop app
@@ -59,11 +80,14 @@ that connects your projects, tasks, notes and files.
 ### Fixed
 - The setup script now clears an out-of-date build cache (seen as
   `No target "where_flutter"`) and retries the app build once.
+- The setup script closes a running copy of Where before rebuilding, so
+  Windows can replace `Where.exe` (previously `LNK1104: cannot open file`).
 
 ### Known limitations
 - File *contents* are not searched yet — only names, paths and types.
 - No sync, accounts, AI or activity tracking (all by design for now).
 - Windows only for the desktop app; macOS and Linux come later.
 
-[Unreleased]: https://github.com/CodingJeffRoblox/Where/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/CodingJeffRoblox/Where/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/CodingJeffRoblox/Where/releases/tag/v0.2.0
 [0.1.0]: https://github.com/CodingJeffRoblox/Where/releases/tag/v0.1.0

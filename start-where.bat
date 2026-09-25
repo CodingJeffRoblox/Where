@@ -189,10 +189,13 @@ if exist "%CMAKE_CACHE%" (
     rmdir /s /q "build\windows" >nul 2>&1
   )
 )
+call :close_running_app
 call :work "Compiling the app - a few minutes the first time..."
 call flutter build windows --release >> "%LOG%" 2>&1 && goto :build_app_done
 rem One automatic retry from a clean slate fixes most stale-cache problems.
 call :warn "First attempt failed - clearing the build folder and trying once more..."
+call :close_running_app
+timeout /t 3 >nul
 rmdir /s /q "build\windows" >nul 2>&1
 call flutter build windows --release >> "%LOG%" 2>&1 || goto :build_app_failed
 :build_app_done
@@ -202,7 +205,19 @@ if not exist "%EXE%" (
   exit /b 1
 )
 copy /y "%ROOT%target\release\where_ffi.dll" "%EXE_DIR%\" >nul || (call :err "Couldn't place where_ffi.dll next to the app." & exit /b 1)
+rem The browser extension lives next to the app so Settings can point to it.
+if exist "%ROOT%browser-extension\manifest.json" xcopy "%ROOT%browser-extension" "%EXE_DIR%\browser-extension\" /e /i /y /q >nul 2>&1
 call :ok "App ready"
+exit /b 0
+
+:close_running_app
+rem Windows cannot overwrite Where.exe while it is open, so close it first.
+tasklist /fi "imagename eq Where.exe" 2>nul | find /i "Where.exe" >nul || exit /b 0
+call :work "Closing Where so it can be updated..."
+taskkill /im Where.exe >nul 2>&1
+timeout /t 2 >nul
+taskkill /im Where.exe /f >nul 2>&1
+timeout /t 1 >nul
 exit /b 0
 
 :build_app_failed
@@ -220,6 +235,7 @@ call :ok "Where is open"
 call :make_shortcuts
 echo.
 echo   %C_DIM%Next time, open Where from your desktop or Start menu.%C_END%
+echo   %C_DIM%To save pages from your browser, see Where - Settings - Browser.%C_END%
 echo   %C_DIM%Run start-where.bat again after updating the code.%C_END%
 echo.
 timeout /t 6 >nul

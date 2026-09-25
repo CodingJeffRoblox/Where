@@ -9,7 +9,7 @@
 Your files, notes, tasks and projects, connected and searchable in one place.
 Local-first. Private by default. No account needed.
 
-[![Version](https://img.shields.io/badge/version-0.1.0_alpha-4F5BD5)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.2.0_alpha-4F5BD5)](CHANGELOG.md)
 [![CI](https://github.com/CodingJeffRoblox/Where/actions/workflows/ci.yml/badge.svg)](https://github.com/CodingJeffRoblox/Where/actions/workflows/ci.yml)
 ![Platform](https://img.shields.io/badge/platform-Windows-0078D6)
 ![Rust](https://img.shields.io/badge/core-Rust-B7410E)
@@ -48,6 +48,9 @@ with **your real files**, fully offline. See
 - **Projects** collect tasks, notes and folders, with a progress bar.
 - **Tasks** with checkboxes, *In progress* status and filters.
 - **Notes** that save as you type and can belong to a project.
+- **Links** from your browser: click the Where button (or Alt+Shift+W) on
+  any page to save it with a title, a note and a project. Addresses are
+  clickable and searchable. [Browser extension →](browser-extension/)
 - **Files**: index only the folders you choose. Where never moves,
   changes or uploads your files.
 - **Ctrl K** for quick actions: create, jump anywhere, index, export,
@@ -82,12 +85,25 @@ Later runs take about a minute.
 If something goes wrong, the script shows the last lines of its log. The full
 log is at `%LOCALAPPDATA%\where-tools\setup-log.txt`.
 
+## Save links from your browser
+
+1. In Chrome, Edge or Brave, open the extensions page (`chrome://extensions`)
+   and turn on **Developer mode**.
+2. Click **Load unpacked** and pick the `browser-extension` folder. After
+   running `start-where.bat` there's also a copy next to `Where.exe`.
+3. Pin the Where button, click it on any page, then **Connect** and
+   **Allow** in Where.
+
+The extension only talks to Where on your own computer. Details in
+[browser-extension/README.md](browser-extension/README.md).
+
 ## Keyboard shortcuts
 
 | Keys | Action |
 |---|---|
 | `Ctrl K` | Quick actions and search |
-| `Ctrl 1` – `Ctrl 5` | Home, Projects, Tasks, Notes, Files |
+| `Ctrl 1` – `Ctrl 6` | Home, Projects, Tasks, Notes, Links, Files |
+| `Alt+Shift+W` (browser) | Save the current page to Where |
 | `Ctrl ,` | Settings |
 | `↑` `↓` `Enter` | Move through results and open |
 | `Esc` | Close a dialog |
@@ -125,11 +141,12 @@ apps/where_flutter ──dart:ffi──► where_ffi ──► where_search ─�
 | `crates/where_indexer/` | Opt-in folder indexing |
 | `crates/where_ffi/` | The bridge between the app and the engine |
 | `crates/where_cli/` | Command-line tool |
+| `browser-extension/` | Save pages from Chrome, Edge or Brave |
 | `docs/` | [Product spec](docs/SPEC.md) and [architecture decisions](docs/adr/) |
 
 ## Status
 
-**v0.1.0 — alpha prototype.** See the [changelog](CHANGELOG.md).
+**v0.2.0 — alpha.** See the [changelog](CHANGELOG.md).
 
 | Spec §38 question | Status |
 |---|---|

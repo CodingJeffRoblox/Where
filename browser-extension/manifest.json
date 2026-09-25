@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "Where — Save to Where",
+  "short_name": "Where",
+  "version": "0.2.0",
+  "description": "Save the page you're on to Where — with a title, a note and a project. Everything stays on your computer.",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_title": "Save to Where (Alt+Shift+W)",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": { "default": "Alt+Shift+W" },
+      "description": "Save this page to Where"
+    }
+  },
+  "permissions": ["activeTab", "storage", "contextMenus"],
+  "host_permissions": ["http://127.0.0.1:47771/*"],
+  "minimum_chrome_version": "116"
+}

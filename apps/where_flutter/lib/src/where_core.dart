@@ -47,6 +47,7 @@ class WhereCore {
   late final _relate = _lib.lookupFunction<_StrCall, _StrCall>('where_relate');
   late final _index = _lib.lookupFunction<_StrCall, _StrCall>('where_index_folder');
   late final _export = _lib.lookupFunction<_StrCall, _StrCall>('where_export');
+  late final _findSource = _lib.lookupFunction<_StrCall, _StrCall>('where_find_source');
   late final _stats = _lib.lookupFunction<_NoArg, _NoArg>('where_stats');
   late final _indexRoots = _lib.lookupFunction<_NoArg, _NoArg>('where_index_roots');
   late final _reindexAll = _lib.lookupFunction<_NoArg, _NoArg>('where_reindex_all');
@@ -109,6 +110,7 @@ class WhereCore {
     String body = '',
     String? projectId,
     Map<String, dynamic>? properties,
+    String? sourceKey,
   }) =>
       _withString(
         jsonEncode({
@@ -117,6 +119,7 @@ class WhereCore {
           'body': body,
           if (projectId != null) 'project_id': projectId,
           if (properties != null) 'properties': properties,
+          if (sourceKey != null) 'source_key': sourceKey,
         }),
         (p) => _create(_handle, p),
       ) as Map<String, dynamic>;
@@ -162,6 +165,10 @@ class WhereCore {
         jsonEncode({'format': format, 'path': path}),
         (p) => _export(_handle, p),
       ) as String;
+
+  /// The object saved under [key] (e.g. "url:https://…"), or null.
+  Map<String, dynamic>? findSource(String key) =>
+      _withString(key, (p) => _findSource(_handle, p)) as Map<String, dynamic>?;
 
   Map<String, dynamic> stats() => _decode(_stats(_handle)) as Map<String, dynamic>;
 

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Save to Where</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <img src="icons/icon-32.png" alt="" width="22" height="22">
+    <span class="brand">Where</span>
+    <span id="status-dot" class="dot" title="Checking…"></span>
+  </header>
+
+  <!-- Checking -->
+  <section id="view-loading" class="view center">
+    <div class="spinner"></div>
+  </section>
+
+  <!-- Where isn't running -->
+  <section id="view-offline" class="view hidden">
+    <div class="big-icon">⏻</div>
+    <h1>Where isn’t running</h1>
+    <p>Open Where on this computer, then try again.</p>
+    <button id="retry" class="primary">Try again</button>
+  </section>
+
+  <!-- This page can't be saved -->
+  <section id="view-unsupported" class="view hidden">
+    <div class="big-icon">🔒</div>
+    <h1>This page can’t be saved</h1>
+    <p>Only normal web pages (http or https) can be saved to Where.</p>
+  </section>
+
+  <!-- Connect -->
+  <section id="view-connect" class="view hidden">
+    <div class="big-icon">🔗</div>
+    <h1>Connect this browser</h1>
+    <p>Where will ask you to allow it. You only need to do this once.</p>
+    <button id="connect" class="primary">Connect to Where</button>
+    <p id="connect-wait" class="hint hidden">
+      <span class="spinner small"></span> Now switch to the <b>Where</b> window and click <b>Allow</b>.
+      Then click the Where button in your toolbar again to save the page.
+    </p>
+    <p id="connect-error" class="error hidden"></p>
+  </section>
+
+  <!-- Save form -->
+  <section id="view-form" class="view hidden">
+    <div id="existing" class="banner hidden">Already in Where — saving updates it.</div>
+
+    <label for="title">Title</label>
+    <input id="title" type="text" maxlength="300" autocomplete="off">
+
+    <label>Link</label>
+    <div class="url-row">
+      <img id="favicon" alt="" width="16" height="16">
+      <a id="url" href="#" target="_blank" rel="noopener noreferrer"></a>
+      <button id="copy" class="icon-btn" title="Copy link">⧉</button>
+    </div>
+
+    <label for="note">Note</label>
+    <textarea id="note" rows="4" placeholder="Why is this worth keeping?"></textarea>
+
+    <label for="project">Project</label>
+    <select id="project"><option value="">No project</option></select>
+
+    <p id="save-error" class="error hidden"></p>
+    <div class="actions">
+      <span class="hint">Ctrl+Enter to save</span>
+      <button id="save" class="primary">Save to Where</button>
+    </div>
+  </section>
+
+  <!-- Saved -->
+  <section id="view-saved" class="view center hidden">
+    <div class="check"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 15-16"/></svg></div>
+    <h1>Saved to Where</h1>
+    <p id="saved-title" class="muted"></p>
+  </section>
+
+  <script src="where-api.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

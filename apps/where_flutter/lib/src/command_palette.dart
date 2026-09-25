@@ -87,6 +87,11 @@ class _PaletteState extends State<_Palette> {
         close(c);
         newObject(root, 'note');
       }, keywords: 'create add write'),
+      _Item(Icons.add_link, 'Add a link…', (c) {
+        final root = WhereScope.read(c).navigator.currentContext!;
+        close(c);
+        showAddLinkDialog(root);
+      }, keywords: 'bookmark website url save page'),
       _Item(Icons.folder_open_outlined, 'Index a folder…', (c) {
         final root = WhereScope.read(c).navigator.currentContext!;
         close(c);

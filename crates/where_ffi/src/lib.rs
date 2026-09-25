@@ -125,7 +125,14 @@ pub unsafe extern "C" fn where_create(h: *mut Handle, request: *const c_char) ->
         if let Some(props) = req["properties"].as_object() {
             new.properties = props.clone();
         }
-        let obj = s.create(new).map_err(err)?;
+        // With a source_key (e.g. "url:https://…"), saving the same thing
+        // again updates it instead of creating a duplicate.
+        let obj = match req["source_key"].as_str() {
+            Some(key) if !key.is_empty() => {
+                s.upsert_by_source_key(new.source_key(key)).map_err(err)?.0
+            }
+            _ => s.create(new).map_err(err)?,
+        };
         if let Some(pid) = req["project_id"].as_str() {
             s.relate(pid, RelationKind::Contains, &obj.id)
                 .map_err(err)?;
@@ -181,6 +188,16 @@ pub unsafe extern "C" fn where_index_folder(h: *mut Handle, path: *const c_char)
 #[no_mangle]
 pub unsafe extern "C" fn where_stats(h: *mut Handle) -> *mut c_char {
     with_store(h, |s| s.stats().map_err(err))
+}
+
+/// Look up an object by its source key → `{"ok": Object | null}`
+#[no_mangle]
+pub unsafe extern "C" fn where_find_source(h: *mut Handle, key: *const c_char) -> *mut c_char {
+    let key = match arg(key) {
+        Ok(v) => v.to_string(),
+        Err(e) => return respond::<()>(Err(e)),
+    };
+    with_store(h, |s| s.get_by_source_key(&key).map_err(err))
 }
 
 unsafe fn json_arg(p: *const c_char) -> Result<Value, String> {
@@ -294,6 +311,41 @@ pub unsafe extern "C" fn where_export(h: *mut Handle, request: *const c_char) ->
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn links_upsert_by_source_key() {
+        unsafe {
+            let h = where_open(c":memory:".as_ptr());
+            let cstr = |v: Value| CString::new(v.to_string()).unwrap();
+            let key = "url:https://example.com/docs";
+            let a = call(where_create(
+                h,
+                cstr(json!({"kind":"bookmark","title":"Docs","body":"first",
+                "source_key":key,"properties":{"url":"https://example.com/docs"}}))
+                .as_ptr(),
+            ));
+            let b = call(where_create(
+                h,
+                cstr(json!({"kind":"bookmark","title":"Docs v2","body":"second",
+                "source_key":key,"properties":{"url":"https://example.com/docs"}}))
+                .as_ptr(),
+            ));
+            assert_eq!(a["ok"]["id"], b["ok"]["id"]);
+            assert_eq!(b["ok"]["body"], "second");
+            let k = CString::new(key).unwrap();
+            let found = call(where_find_source(h, k.as_ptr()));
+            assert_eq!(found["ok"]["title"], "Docs v2");
+            let missing = call(where_find_source(h, c"url:https://nope.test".as_ptr()));
+            assert!(missing["ok"].is_null());
+            let r = call(where_search(h, c"example".as_ptr(), 10));
+            assert_eq!(
+                r["ok"]["hits"].as_array().unwrap().len(),
+                1,
+                "url is searchable"
+            );
+            where_close(h);
+        }
+    }
 
     #[test]
     fn update_delete_relate_export() {

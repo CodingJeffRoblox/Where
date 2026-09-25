@@ -1,0 +1,119 @@
+:root {
+  --bg: #f6f7fb;
+  --surface: #ffffff;
+  --text: #1b1c22;
+  --muted: #5d6070;
+  --border: #dfe1ea;
+  --accent: #4f5bd5;
+  --accent-text: #ffffff;
+  --ok: #2e7d32;
+  --err: #c62828;
+  --banner: #eef0ff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111217;
+    --surface: #1b1c23;
+    --text: #e6e7ee;
+    --muted: #a3a6b5;
+    --border: #2e3040;
+    --accent: #8e98ff;
+    --accent-text: #11121a;
+    --ok: #81c784;
+    --err: #ef9a9a;
+    --banner: #23264a;
+  }
+}
+
+* { box-sizing: border-box; }
+body {
+  width: 360px;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.45 "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.brand { font-weight: 800; letter-spacing: -0.2px; flex: 1; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); transition: background .3s; }
+.dot.on { background: var(--ok); }
+.dot.off { background: var(--err); }
+
+.view { padding: 16px; animation: in .28s cubic-bezier(.2,.8,.2,1); }
+.view.center { display: flex; flex-direction: column; align-items: center; text-align: center; min-height: 170px; justify-content: center; }
+.view:not(.center) { display: block; }
+#view-offline, #view-connect, #view-unsupported { text-align: center; padding: 22px 20px; }
+.hidden { display: none !important; }
+@keyframes in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+h1 { font-size: 16px; margin: 6px 0 4px; }
+p { margin: 4px 0 12px; color: var(--muted); }
+.muted { color: var(--muted); }
+.big-icon { font-size: 28px; }
+
+label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin: 12px 0 4px; }
+label:first-of-type { margin-top: 0; }
+input, textarea, select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  transition: border-color .15s, box-shadow .15s;
+}
+textarea { resize: vertical; min-height: 76px; }
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.url-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 6px 6px 10px;
+  border: 1px solid var(--border); border-radius: 9px;
+  background: var(--surface);
+}
+.url-row img { flex: none; border-radius: 3px; }
+.url-row a {
+  flex: 1; min-width: 0;
+  color: var(--accent); text-decoration: none;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.url-row a:hover { text-decoration: underline; }
+
+button { font: inherit; cursor: pointer; border: none; border-radius: 9px; transition: transform .12s, filter .15s, opacity .15s; }
+button:active { transform: scale(.97); }
+button:disabled { opacity: .55; cursor: default; }
+.primary { background: var(--accent); color: var(--accent-text); padding: 9px 16px; font-weight: 600; }
+.primary:hover:not(:disabled) { filter: brightness(1.08); }
+.icon-btn { background: transparent; color: var(--muted); padding: 2px 8px; font-size: 16px; }
+.icon-btn:hover { color: var(--text); background: var(--border); }
+
+.actions { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; }
+.hint { font-size: 12px; color: var(--muted); }
+.error { color: var(--err); font-size: 13px; margin: 10px 0 0; }
+.banner {
+  background: var(--banner); color: var(--text);
+  border-radius: 9px; padding: 8px 10px; margin-bottom: 12px; font-size: 13px;
+}
+
+.spinner {
+  width: 26px; height: 26px; border-radius: 50%;
+  border: 3px solid var(--border); border-top-color: var(--accent);
+  animation: spin .8s linear infinite;
+}
+.spinner.small { width: 12px; height: 12px; border-width: 2px; display: inline-block; vertical-align: -2px; margin-right: 4px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.check svg { width: 56px; height: 56px; }
+.check circle { fill: none; stroke: var(--ok); stroke-width: 3; stroke-dasharray: 151; stroke-dashoffset: 151; animation: draw .45s ease-out forwards; }
+.check path { fill: none; stroke: var(--ok); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 40; stroke-dashoffset: 40; animation: draw .3s .35s ease-out forwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }

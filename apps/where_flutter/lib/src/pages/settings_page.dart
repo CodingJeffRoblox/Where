@@ -1,6 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../actions.dart';
+import '../browser_bridge.dart';
+import '../models.dart';
 import '../state.dart';
 import '../theme.dart';
 import '../widgets.dart';
@@ -87,6 +91,12 @@ class SettingsPage extends StatelessWidget {
               ),
               section(
                 2,
+                'Browser',
+                'Save pages from Chrome, Edge or Brave straight into Where, with a title, a note and a project.',
+                const _BrowserCard(),
+              ),
+              section(
+                2,
                 'Indexed folders',
                 'Only these folders are searched. Files are never moved, changed or uploaded.',
                 Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -149,7 +159,7 @@ class SettingsPage extends StatelessWidget {
                 'Everything can be done from the keyboard.',
                 const Column(children: [
                   _Shortcut('Ctrl K', 'Quick actions and search'),
-                  _Shortcut('Ctrl 1 – 5', 'Home, Projects, Tasks, Notes, Files'),
+                  _Shortcut('Ctrl 1 – 6', 'Home, Projects, Tasks, Notes, Links, Files'),
                   _Shortcut('Ctrl ,', 'Settings'),
                   _Shortcut('↑ ↓  Enter', 'Move through results and open'),
                   _Shortcut('Esc', 'Close a dialog'),
@@ -158,7 +168,7 @@ class SettingsPage extends StatelessWidget {
               FadeSlideIn(
                 index: 5,
                 child: Center(
-                  child: Text('Where 0.1.0 · alpha · local-first',
+                  child: Text('Where 0.2.0 · alpha · local-first',
                       style: t.labelMedium?.copyWith(color: scheme.onSurfaceVariant)),
                 ),
               ),
@@ -247,5 +257,132 @@ class _Shortcut extends StatelessWidget {
         Text(label, style: t.bodyMedium),
       ]),
     );
+  }
+}
+
+class _BrowserCard extends StatelessWidget {
+  const _BrowserCard();
+
+  static String _extensionFolder() {
+    final exeDir = File(Platform.resolvedExecutable).parent.path;
+    return '$exeDir${Platform.pathSeparator}browser-extension';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = WhereScope.of(context);
+    final t = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
+    final bridge = state.bridge;
+    final folder = _extensionFolder();
+    final folderExists = Directory(folder).existsSync();
+
+    final status = bridge.error != null
+        ? Pill('Not available', color: scheme.error, icon: Icons.error_outline)
+        : bridge.running
+            ? Pill('Ready on this computer', color: statusColor(context, 'done'), icon: Icons.check)
+            : const Pill('Starting…');
+
+    Widget step(int n, String title, Widget body) => Padding(
+          padding: const EdgeInsets.only(bottom: 14),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Container(
+              width: 24,
+              height: 24,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(color: scheme.primary.withAlpha(30), shape: BoxShape.circle),
+              child: Text('$n', style: t.labelMedium?.copyWith(color: scheme.primary, fontWeight: FontWeight.w800)),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(title, style: t.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                const SizedBox(height: 4),
+                body,
+              ]),
+            ),
+          ]),
+        );
+
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(children: [
+        status,
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            bridge.error ?? 'Only this computer can connect (port ${BrowserBridge.port}). Nothing is sent to the internet.',
+            style: t.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+          ),
+        ),
+      ]),
+      const SizedBox(height: 18),
+      step(
+        1,
+        'Open your browser’s extensions page and turn on Developer mode',
+        Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
+          for (final page in const ['chrome://extensions', 'edge://extensions', 'brave://extensions'])
+            ActionChip(
+              avatar: const Icon(Icons.content_copy_rounded, size: 14),
+              label: Text(page),
+              onPressed: () => copyText(context, page, what: 'Address'),
+            ),
+          Text('Copy, then paste into the address bar.', style: t.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
+        ]),
+      ),
+      step(
+        2,
+        'Click “Load unpacked” and choose the Where extension folder',
+        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          SelectableText(folder, style: t.bodySmall?.copyWith(fontFamily: 'monospace')),
+          const SizedBox(height: 6),
+          Wrap(spacing: 8, children: [
+            OutlinedButton.icon(
+              onPressed: folderExists ? () => openPath(context, folder) : null,
+              icon: const Icon(Icons.folder_open_outlined, size: 16),
+              label: const Text('Show folder'),
+            ),
+            TextButton.icon(
+              onPressed: () => copyText(context, folder, what: 'Folder path'),
+              icon: const Icon(Icons.content_copy_rounded, size: 16),
+              label: const Text('Copy path'),
+            ),
+          ]),
+          if (!folderExists)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(
+                'Not found here yet — run start-where.bat once more, or use the browser-extension folder in the Where source code.',
+                style: t.bodySmall?.copyWith(color: scheme.error),
+              ),
+            ),
+        ]),
+      ),
+      step(
+        3,
+        'Pin the Where button, open any web page, click it, then click Connect',
+        Text(
+          'Where will ask you to allow the connection. After that, save any page with a click or Alt+Shift+W — '
+          'or right-click a page or link and choose “Save to Where”.',
+          style: t.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+        ),
+      ),
+      const Divider(height: 24),
+      Text('Connected browsers', style: t.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+      const SizedBox(height: 6),
+      if (state.browserClients.isEmpty)
+        Text('None yet.', style: t.bodyMedium?.copyWith(color: scheme.onSurfaceVariant))
+      else
+        for (final c in state.browserClients)
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(Icons.public, color: scheme.primary),
+            title: Text(c.name),
+            subtitle: Text('Connected ${timeAgo(c.added)}'),
+            trailing: TextButton(
+              onPressed: () => state.disconnectBrowser(c),
+              child: const Text('Disconnect'),
+            ),
+          ),
+    ]);
   }
 }

@@ -1,13 +1,15 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import 'browser_bridge.dart';
 import 'models.dart';
 import 'where_core.dart';
 
-enum Section { home, projects, tasks, notes, files, settings }
+enum Section { home, projects, tasks, notes, links, files, settings }
 
 extension SectionInfo on Section {
   String get label => const {
@@ -15,6 +17,7 @@ extension SectionInfo on Section {
         Section.projects: 'Projects',
         Section.tasks: 'Tasks',
         Section.notes: 'Notes',
+        Section.links: 'Links',
         Section.files: 'Files',
         Section.settings: 'Settings',
       }[this]!;
@@ -24,6 +27,7 @@ extension SectionInfo on Section {
         Section.projects: Icons.folder_special_outlined,
         Section.tasks: Icons.check_circle_outline,
         Section.notes: Icons.sticky_note_2_outlined,
+        Section.links: Icons.link_rounded,
         Section.files: Icons.insert_drive_file_outlined,
         Section.settings: Icons.tune_rounded,
       }[this]!;
@@ -33,6 +37,7 @@ extension SectionInfo on Section {
         Section.projects: Icons.folder_special,
         Section.tasks: Icons.check_circle,
         Section.notes: Icons.sticky_note_2,
+        Section.links: Icons.link_rounded,
         Section.files: Icons.insert_drive_file,
         Section.settings: Icons.tune_rounded,
       }[this]!;
@@ -49,12 +54,17 @@ class WhereState extends ChangeNotifier {
   final File _settingsFile;
   final messenger = GlobalKey<ScaffoldMessengerState>();
   final navigator = GlobalKey<NavigatorState>();
+  late final bridge = BrowserBridge(this);
 
   int revision = 0;
   Section section = Section.home;
   ThemeMode themeMode = ThemeMode.system;
   bool indexing = false;
   String? indexingLabel;
+
+  /// Browsers allowed to save links (see browser_bridge.dart).
+  List<BrowserClient> browserClients = [];
+  bool _pairingOpen = false;
 
   void bump() {
     revision++;
@@ -238,6 +248,101 @@ class WhereState extends ChangeNotifier {
     return guard(() => core.export(format, path), success: 'Exported to $path');
   }
 
+  // ---------------------------------------------------------------- links
+
+  WObject? findLink(String url) {
+    try {
+      final j = core.findSource(LinkInfo.sourceKey(url));
+      return j == null ? null : WObject.fromJson(j);
+    } on WhereException {
+      return null;
+    }
+  }
+
+  /// Saves a web link. Saving the same address again updates it.
+  /// A null [note] keeps the existing note (e.g. right-click saves).
+  WObject saveLink({
+    required String url,
+    String title = '',
+    String? note,
+    String? projectId,
+    String source = 'Where',
+  }) {
+    if (!LinkInfo.isWebUrl(url)) {
+      throw WhereException('Only web addresses (http:// or https://) can be saved.');
+    }
+    final clean = LinkInfo.normalize(url);
+    final existing = findLink(clean);
+    final t = title.trim().isEmpty ? (existing?.title ?? LinkInfo.domain(clean)) : title.trim();
+    final json = core.create(
+      'bookmark',
+      t,
+      body: note ?? existing?.body ?? '',
+      projectId: projectId,
+      sourceKey: LinkInfo.sourceKey(clean),
+      properties: {
+        'url': clean,
+        'domain': LinkInfo.domain(clean),
+        'saved_from': source,
+      },
+    );
+    bump();
+    return WObject.fromJson(json);
+  }
+
+  /// Asks the person at the computer whether a browser may connect.
+  /// Returns a new access token, or null if declined.
+  Future<String?> requestBrowserPairing(String client) async {
+    final ctx = navigator.currentContext;
+    if (ctx == null || _pairingOpen) return null;
+    _pairingOpen = true;
+    try {
+      final allowed = await showDialog<bool>(
+        context: ctx,
+        barrierDismissible: false,
+        builder: (c) => AlertDialog(
+          icon: const Icon(Icons.link_rounded),
+          title: Text('Connect $client to Where?'),
+          content: const SizedBox(
+            width: 400,
+            child: Text(
+              'The Where browser extension wants to save links into Where.\n\n'
+              'Only allow this if you just clicked Connect in your browser. '
+              'You can disconnect it any time in Settings.',
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Deny')),
+            FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Allow')),
+          ],
+        ),
+      );
+      if (allowed != true) return null;
+      final rnd = Random.secure();
+      final token = List.generate(32, (_) => rnd.nextInt(256).toRadixString(16).padLeft(2, '0')).join();
+      browserClients = [
+        ...browserClients,
+        BrowserClient(name: client, token: token, added: DateTime.now()),
+      ];
+      _saveSettings();
+      toast('$client is connected. Save pages with the Where button in your browser.');
+      notifyListeners();
+      return token;
+    } finally {
+      _pairingOpen = false;
+    }
+  }
+
+  bool isBrowserToken(String? token) =>
+      token != null && token.isNotEmpty && browserClients.any((c) => c.token == token);
+
+  void disconnectBrowser(BrowserClient client) {
+    browserClients = browserClients.where((c) => c.token != client.token).toList();
+    _saveSettings();
+    toast('${client.name} disconnected');
+    notifyListeners();
+  }
+
   // ------------------------------------------------------------ settings
 
   void _loadSettings() {
@@ -248,6 +353,9 @@ class WhereState extends ChangeNotifier {
         (m) => m.name == j['theme'],
         orElse: () => ThemeMode.system,
       );
+      browserClients = ((j['browsers'] as List<dynamic>?) ?? const [])
+          .map((b) => BrowserClient.fromJson(b as Map<String, dynamic>))
+          .toList();
     } catch (_) {
       // Corrupt settings are not worth crashing over; defaults apply.
     }
@@ -255,7 +363,10 @@ class WhereState extends ChangeNotifier {
 
   void _saveSettings() {
     try {
-      _settingsFile.writeAsStringSync(jsonEncode({'theme': themeMode.name}));
+      _settingsFile.writeAsStringSync(jsonEncode({
+        'theme': themeMode.name,
+        'browsers': browserClients.map((b) => b.toJson()).toList(),
+      }));
     } catch (_) {}
   }
 }
@@ -271,4 +382,21 @@ class WhereScope extends InheritedNotifier<WhereState> {
   /// Access without subscribing to rebuilds (for callbacks).
   static WhereState read(BuildContext context) =>
       context.getInheritedWidgetOfExactType<WhereScope>()!.notifier!;
+}
+
+/// A browser that was allowed to save links into Where.
+class BrowserClient {
+  const BrowserClient({required this.name, required this.token, required this.added});
+
+  factory BrowserClient.fromJson(Map<String, dynamic> j) => BrowserClient(
+        name: j['name'] as String? ?? 'Browser',
+        token: j['token'] as String? ?? '',
+        added: DateTime.tryParse(j['added'] as String? ?? '') ?? DateTime.now(),
+      );
+
+  final String name;
+  final String token;
+  final DateTime added;
+
+  Map<String, dynamic> toJson() => {'name': name, 'token': token, 'added': added.toIso8601String()};
 }
