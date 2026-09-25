@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "where_flutter" "\0"
+            VALUE "CompanyName", "CrownCore Studios" "\0"
+            VALUE "FileDescription", "Where" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "where_flutter" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "where_flutter.exe" "\0"
-            VALUE "ProductName", "where_flutter" "\0"
+            VALUE "InternalName", "Where" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 CrownCore Studios. All rights reserved." "\0"
+            VALUE "OriginalFilename", "Where.exe" "\0"
+            VALUE "ProductName", "Where" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

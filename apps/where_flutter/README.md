@@ -3,10 +3,27 @@
 The Where desktop app (Flutter). Talks to the Rust core through `dart:ffi`
 (`crates/where_ffi`), passing JSON strings across the boundary.
 
-> Status: first shell. It has not yet been compiled in CI — see the
-> "Flutter app" checklist in the Notion roadmap.
+> Status: pre-alpha. Not yet compiled in CI — see the Notion roadmap.
 
-## Run it (Windows / macOS / Linux)
+## Features
+
+- **Home** — search everything as you type, results grouped by kind with
+  matches highlighted; quick actions, live counts and recent items.
+- **Projects / Tasks / Notes / Files** — sidebar sections with cards, task
+  checkboxes and filters, note previews, indexed folders.
+- **Detail pages** — edit titles inline, notes autosave, task status, move
+  to a project, open or reveal files, and everything connected.
+- **Ctrl K** command palette — create, jump, index, export, switch theme.
+- **Settings** — theme, indexed folders, privacy panel, export.
+- Subtle motion throughout: fades, staggered lists, hover lift, animated
+  checkboxes and counters. Folder indexing runs in the background.
+
+## Run it
+
+**Windows:** double-click `start-where.bat` in the repo root — it installs
+everything, builds, bundles `where_ffi.dll` next to the app and launches it.
+
+### Manually (Windows / macOS / Linux)
 
 ```sh
 # 1. Build the native core from the repo root
@@ -28,7 +45,10 @@ a Phase 1 task.
 
 ## What's here
 
+- `lib/main.dart` — startup, theme, friendly error if the engine is missing.
 - `lib/src/where_core.dart` — typed wrapper over the C ABI.
-- `lib/main.dart` — search-first home screen (spec §30): search box, results
-  grouped by kind, arrow-key navigation, Enter to open, quick-create for
-  projects/tasks/notes, "Index a folder", light/dark themes.
+- `lib/src/state.dart` — app state, settings, background indexing.
+- `lib/src/shell.dart` — sidebar, section transitions, keyboard shortcuts.
+- `lib/src/command_palette.dart` — Ctrl K.
+- `lib/src/pages/` — home, projects, tasks, notes, files, settings, detail.
+- `lib/src/widgets.dart`, `theme.dart`, `models.dart` — shared UI pieces.

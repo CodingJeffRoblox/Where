@@ -8,3 +8,6 @@ apps/where_flutter/.dart_tool/
 apps/where_flutter/build/
 apps/where_flutter/.flutter-plugins*
 apps/where_flutter/pubspec.lock
+# Platform folders other than Windows are generated on demand
+apps/where_flutter/linux/
+apps/where_flutter/macos/

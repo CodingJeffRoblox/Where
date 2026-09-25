@@ -183,9 +183,192 @@ pub unsafe extern "C" fn where_stats(h: *mut Handle) -> *mut c_char {
     with_store(h, |s| s.stats().map_err(err))
 }
 
+unsafe fn json_arg(p: *const c_char) -> Result<Value, String> {
+    arg(p).and_then(|s| serde_json::from_str(s).map_err(err))
+}
+
+/// `{"id": "...", "title"?: "...", "body"?: "...", "properties"?: {...}}`
+/// Properties are merged; a `null` value removes that property.
+#[no_mangle]
+pub unsafe extern "C" fn where_update(h: *mut Handle, request: *const c_char) -> *mut c_char {
+    let req = match json_arg(request) {
+        Ok(v) => v,
+        Err(e) => return respond::<()>(Err(e)),
+    };
+    with_store(h, |s| {
+        let id = req["id"].as_str().ok_or("id is required")?;
+        let mut obj = s.get(id).map_err(err)?;
+        if let Some(title) = req["title"].as_str() {
+            if title.trim().is_empty() {
+                return Err("title must not be empty".to_string());
+            }
+            obj.title = title.trim().to_string();
+        }
+        if let Some(body) = req["body"].as_str() {
+            obj.body = body.to_string();
+        }
+        if let Some(props) = req["properties"].as_object() {
+            for (k, v) in props {
+                if v.is_null() {
+                    obj.properties.remove(k);
+                } else {
+                    obj.properties.insert(k.clone(), v.clone());
+                }
+            }
+        }
+        s.save(&mut obj).map_err(err)?;
+        Ok(obj)
+    })
+}
+
+/// Remove an object from Where. Never touches files on disk.
+#[no_mangle]
+pub unsafe extern "C" fn where_delete(h: *mut Handle, id: *const c_char) -> *mut c_char {
+    let id = match arg(id) {
+        Ok(v) => v.to_string(),
+        Err(e) => return respond::<()>(Err(e)),
+    };
+    with_store(h, |s| s.delete(&id).map_err(err))
+}
+
+/// `{"from": id, "kind": "contains", "to": id, "remove"?: bool}`
+#[no_mangle]
+pub unsafe extern "C" fn where_relate(h: *mut Handle, request: *const c_char) -> *mut c_char {
+    let req = match json_arg(request) {
+        Ok(v) => v,
+        Err(e) => return respond::<()>(Err(e)),
+    };
+    with_store(h, |s| {
+        let from = req["from"].as_str().ok_or("from is required")?;
+        let to = req["to"].as_str().ok_or("to is required")?;
+        let kind: RelationKind = req["kind"]
+            .as_str()
+            .unwrap_or("contains")
+            .parse()
+            .map_err(err)?;
+        if req["remove"].as_bool().unwrap_or(false) {
+            s.unrelate(from, kind, to).map_err(err)?;
+        } else {
+            s.relate(from, kind, to).map_err(err)?;
+        }
+        Ok(())
+    })
+}
+
+/// Folders the user has indexed → `[{"path": ..., "folder_id": ...}]`
+#[no_mangle]
+pub unsafe extern "C" fn where_index_roots(h: *mut Handle) -> *mut c_char {
+    with_store(h, |s| {
+        let roots = s.index_roots().map_err(err)?;
+        Ok(roots
+            .into_iter()
+            .map(|(path, folder_id)| json!({ "path": path, "folder_id": folder_id }))
+            .collect::<Vec<_>>())
+    })
+}
+
+/// Refresh every indexed folder → `[IndexReport]`
+#[no_mangle]
+pub unsafe extern "C" fn where_reindex_all(h: *mut Handle) -> *mut c_char {
+    with_store(h, |s| {
+        where_indexer::reindex_all(s, &Default::default()).map_err(err)
+    })
+}
+
+/// `{"format": "json"|"md"|"csv"|"sqlite", "path": "..."}`
+#[no_mangle]
+pub unsafe extern "C" fn where_export(h: *mut Handle, request: *const c_char) -> *mut c_char {
+    let req = match json_arg(request) {
+        Ok(v) => v,
+        Err(e) => return respond::<()>(Err(e)),
+    };
+    with_store(h, |s| {
+        let format: where_storage::export::Format =
+            req["format"].as_str().unwrap_or("json").parse()?;
+        let path = req["path"].as_str().ok_or("path is required")?;
+        where_storage::export::export(s, format, std::path::Path::new(path)).map_err(err)?;
+        Ok(path.to_string())
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn update_delete_relate_export() {
+        unsafe {
+            let h = where_open(c":memory:".as_ptr());
+            let cstr = |v: Value| CString::new(v.to_string()).unwrap();
+            let p = call(where_create(
+                h,
+                cstr(json!({"kind":"project","title":"Lab"})).as_ptr(),
+            ));
+            let t = call(where_create(
+                h,
+                cstr(json!({"kind":"task","title":"Monitor","properties":{"status":"todo"}}))
+                    .as_ptr(),
+            ));
+            let (pid, tid) = (
+                p["ok"]["id"].as_str().unwrap(),
+                t["ok"]["id"].as_str().unwrap(),
+            );
+
+            let u = call(where_update(
+                h,
+                cstr(json!({"id":tid,"title":"Build monitor","properties":{"status":"done"}}))
+                    .as_ptr(),
+            ));
+            assert_eq!(u["ok"]["title"], "Build monitor");
+            assert_eq!(u["ok"]["properties"]["status"], "done");
+            let bad = call(where_update(
+                h,
+                cstr(json!({"id":tid,"title":"  "})).as_ptr(),
+            ));
+            assert!(bad["error"].is_string());
+
+            call(where_relate(
+                h,
+                cstr(json!({"from":pid,"kind":"contains","to":tid})).as_ptr(),
+            ));
+            let id_c = CString::new(pid).unwrap();
+            assert_eq!(
+                call(where_get(h, id_c.as_ptr()))["ok"]["related"]
+                    .as_array()
+                    .unwrap()
+                    .len(),
+                1
+            );
+            call(where_relate(
+                h,
+                cstr(json!({"from":pid,"to":tid,"remove":true})).as_ptr(),
+            ));
+            assert!(call(where_get(h, id_c.as_ptr()))["ok"]["related"]
+                .as_array()
+                .unwrap()
+                .is_empty());
+
+            let dir = std::env::temp_dir().join(format!("where-ffi-{}.json", std::process::id()));
+            let e = call(where_export(
+                h,
+                cstr(json!({"format":"json","path":dir.to_string_lossy()})).as_ptr(),
+            ));
+            assert!(e["ok"].is_string(), "{e}");
+            assert!(std::fs::read_to_string(&dir)
+                .unwrap()
+                .contains("Build monitor"));
+            let _ = std::fs::remove_file(&dir);
+
+            let tid_c = CString::new(tid).unwrap();
+            assert!(call(where_delete(h, tid_c.as_ptr()))["error"].is_null());
+            assert!(call(where_get(h, tid_c.as_ptr()))["error"].is_string());
+            assert!(call(where_index_roots(h))["ok"]
+                .as_array()
+                .unwrap()
+                .is_empty());
+            where_close(h);
+        }
+    }
 
     unsafe fn call(p: *mut c_char) -> Value {
         let v = serde_json::from_str(CStr::from_ptr(p).to_str().unwrap()).unwrap();

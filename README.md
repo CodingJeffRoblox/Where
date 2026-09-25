@@ -17,11 +17,30 @@ Ask Where.
 | Can it store objects locally? | ✅ `where_storage` — SQLite, versioned migrations, WAL |
 | Can it search those objects quickly? | ✅ `where_search` — FTS5 prefix search, `kind:` filters, sub-millisecond on small sets |
 | Can objects be connected? | ✅ `contains` / `involves` / `references`, shown in both directions |
-| Can results be displayed clearly and quickly? | 🟡 CLI groups results by kind; Flutter shell in progress |
+| Can results be displayed clearly and quickly? | 🟡 Desktop app with grouped, highlighted results — awaiting first Windows build |
 
 Search is relationship-aware: `website authentication` finds the task
 *Fix Firebase authentication* because it lives in the *Website* project, and
 the project itself shows up because it contains a match.
+
+## Quick start (Windows)
+
+Double-click **`start-where.bat`** in the repo folder. It will:
+
+1. Check for Git, the Visual Studio C++ Build Tools, Rust and Flutter, and
+   install anything missing (Windows may ask you to approve installers).
+2. Remind you to switch on Windows **Developer Mode** if it's off (Flutter
+   needs it for plugins).
+3. Build the Rust core and the desktop app, then open Where.
+
+It also adds **Where** to your desktop and Start menu. Run
+`start-where.bat update` to pull the latest code and rebuild, or
+`start-where.bat cli` for the command-line version. If the desktop app fails
+to build, the script shows the error and falls back to the command line.
+Detailed output is logged to `%LOCALAPPDATA%\where-tools\setup-log.txt`.
+
+The first run downloads several GB of tools and can take 20–40 minutes.
+Later runs take about a minute.
 
 ## Try it
 
