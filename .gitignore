@@ -58,6 +58,11 @@ secrets.*
 *.secret
 
 # --- Downloads and packages (update zips, bundles, installers) --------------
+/dist/
+/release-files/
+*.dmg
+*.AppImage
+*.deb
 *.zip
 *.7z
 *.rar

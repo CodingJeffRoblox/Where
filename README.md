@@ -123,6 +123,14 @@ If something goes wrong, the script shows the last lines of its log:
    publishes the Release. See
    [`.github/workflows/release.yml`](.github/workflows/release.yml).
 
+**By hand (Windows):** double-click **`make-release.bat`**. It zips the app
+you built with `start-where.bat`, builds the installer, adds the browser
+extension and anything in `release-files\` (e.g. a Mac `.dmg` or Linux
+`.AppImage` built on those computers), and creates or updates the GitHub
+Release with the notes from `docs/releases/`. `make-release.bat -Fetch` also
+pulls in the Mac and Linux files GitHub built for that tag; `-Draft` publishes
+a draft first.
+
 ## Save links from your browser
 
 1. In Chrome, Edge or Brave, open the extensions page (`chrome://extensions`)
