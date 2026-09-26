@@ -19,7 +19,7 @@ Where should be a friendly project to take part in, whoever you are.
 ## Reporting
 
 If someone's behaviour worries you, contact the maintainer privately
-through [GitHub](https://github.com/CodingJeffRoblox). Reports are kept
+through [GitHub](https://github.com/ItsJeffTheDev). Reports are kept
 confidential. The maintainer may remove comments, lock discussions, or
 block people who break these rules.
 
