@@ -6,7 +6,7 @@ Thanks for helping. Where is small and early, so the process is light.
 
 - Read the [product spec](docs/SPEC.md) — especially the principles (§5)
   and the product boundaries (§40).
-- Look at open [issues](https://github.com/CodingJeffRoblox/Where/issues)
+- Look at open [issues](https://github.com/ItsJeffTheDev/Where/issues)
   or the roadmap. For anything bigger than a small fix, open an issue first
   so we can agree on the approach.
 
